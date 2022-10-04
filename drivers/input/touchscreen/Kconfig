@@ -400,6 +400,17 @@ config TOUCHSCREEN_GOODIX
 	  To compile this driver as a module, choose M here: the
 	  module will be called goodix.
 
+config TOUCHSCREEN_FOCALTECH_FT3658
+	tristate "Focaltech FT3658 touchscreen"
+	depends on I2C
+	help
+	  Say Y here if you have a Focaltech FT3658 touchscreen.
+	  Installed commonly in POCO F3 and REDMI K40 smartphones.
+
+	  If unsure, say N
+
+	  To compile this driver as a module, choose M here : the
+	  module will be called focaltech_touch.
 config TOUCHSCREEN_HIDEEP
 	tristate "HiDeep Touch IC"
 	depends on I2C
