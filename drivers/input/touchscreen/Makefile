@@ -77,6 +77,7 @@ obj-$(CONFIG_TOUCHSCREEN_RM_TS)		+= raydium_i2c_ts.o
 obj-$(CONFIG_TOUCHSCREEN_S3C2410)	+= s3c2410_ts.o
 obj-$(CONFIG_TOUCHSCREEN_S6SY761)	+= s6sy761.o
 obj-$(CONFIG_TOUCHSCREEN_SILEAD)	+= silead.o
+obj-$(CONFIG_TOUCHSCREEN_FOCALTECH_FT3658)	+= ft3658_base.o ft3658_core.o ft3658_esd.o ft3658_flasher.o ft3658_fwflash.o ft3658_gestures.o ft3658_pointreport.o ft3658_spi.o ft3658.o
 obj-$(CONFIG_TOUCHSCREEN_SIS_I2C)	+= sis_i2c.o
 obj-$(CONFIG_TOUCHSCREEN_ST1232)	+= st1232.o
 obj-$(CONFIG_TOUCHSCREEN_STMFTS)	+= stmfts.o
