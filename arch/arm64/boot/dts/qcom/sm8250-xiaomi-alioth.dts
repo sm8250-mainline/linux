@@ -507,3 +507,24 @@
 	vdda-phy-supply = <&vreg_l5a_0p88>;
 	vdda-pll-supply = <&vreg_l9a_1p2>;
 };
+
+&spi4 {
+		status = "okay";
+		pinctrl-names = "default\0sleep";
+		pinctrl-0 = <0x29a 0x6c3>;
+		pinctrl-1 = <0x29b 0x6c4>;
+		spi-max-frequency = <0x5b8d80>;
+		focaltech@0 {
+				status = "ok";
+				compatible = "focaltech,fts";
+				reg = <0x00>;
+				focaltech,reset-gpio = <0x65 0x21 0x00>;
+				focaltech,irq-gpio = <0x65 0x27 0x2008>;
+				focaltech,max-touch-number = <0x0a>;
+				focaltech,display-coords = <0x00 0x00 0x21c0 0x4b00>;
+				focaltech,open-min = <0xbb8>;
+				focaltech,touch-range-array = <0x01 0x05 0x0a 0x0f 0x14>;
+				focaltech,touch-def-array = <0x03 0x03 0x03 0x03>;
+				focaltech,touch-expert-array = <0x0a 0x0a 0x0a 0x0a 0x14 0x14 0x0f 0x0a 0x14 0x14 0x14 0x0a>;
+			};
+};
