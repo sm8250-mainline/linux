@@ -110,7 +110,7 @@ int fts_point_report_check_init(struct fts_ts_data *ts_data)
 	if (ts_data->ts_workqueue) {
 		INIT_DELAYED_WORK(&ts_data->prc_work, fts_prc_func);
 	} else {
-		FTS_ERROR("fts workqueue is NULL, can't run point report check function");
+		printk("fts workqueue is NULL, can't run point report check function");
 		return -EINVAL;
 	}
 

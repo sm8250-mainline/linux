@@ -99,7 +99,7 @@ int idc_esdcheck_lcderror(struct fts_ts_data *ts_data)
 
 	ret = fts_read_reg(FTS_REG_ESD_SATURATE, &val);
 	if (ret < 0) {
-		FTS_ERROR("read reg0xED fail,ret:%d", ret);
+		printk("ERR: FocaltechTS:read reg0xED fail,ret:%d", ret);
 		return -EIO;
 	}
 
@@ -109,7 +109,7 @@ int idc_esdcheck_lcderror(struct fts_ts_data *ts_data)
 		* 2. LCD driver need reset(recovery) LCD and set lcd_need_reset to 0
 		* 3. recover TP state
 		*/
-		FTS_INFO("LCD ESD, need execute LCD reset");
+		printk("FocaltechTS:LCD ESD, need execute LCD reset");
 		lcd_need_reset = 1;
 		tp_need_recovery = 1;
 	}
@@ -145,7 +145,7 @@ static bool get_chip_id(struct fts_ts_data *ts_data)
 		reg_addr = FTS_REG_CHIP_ID;
 		ret = fts_read(&reg_addr, 1, &reg_value, 1);
 		if (ret < 0) {
-			FTS_ERROR("read chip id fail,ret:%d", ret);
+			printk("ERR: FocaltechTS:read chip id fail,ret:%d", ret);
 			fts_esdcheck_data.nack_cnt++;
 		} else {
 			if (reg_value == chip_id) {
@@ -160,7 +160,7 @@ static bool get_chip_id(struct fts_ts_data *ts_data)
 
 	/* if can't get correct data in 3 times, then need hardware reset */
 	if (i >= 3) {
-		FTS_ERROR("read chip id 3 times fail, need execute TP reset");
+		printk("ERR: FocaltechTS:read chip id 3 times fail, need execute TP reset");
 		return true;
 	}
 
@@ -184,7 +184,7 @@ static bool get_flow_cnt(struct fts_ts_data *ts_data)
 	reg_addr = FTS_REG_FLOW_WORK_CNT;
 	ret = fts_read(&reg_addr, 1, &reg_value, 1);
 	if (ret < 0) {
-		FTS_ERROR("read reg0x91 fail,ret:%d", ret);
+		printk("ERR: FocaltechTS:read reg0x91 fail,ret:%d", ret);
 		fts_esdcheck_data.nack_cnt++;
 	} else {
 		if (reg_value == fts_esdcheck_data.flow_work_cnt_last) {
@@ -235,7 +235,7 @@ static int esdcheck_algorithm(struct fts_ts_data *ts_data)
 
 	/* 3. check fts_esdcheck_data.proc_debug state, if 1-proc busy, no need check esd*/
 	if (fts_esdcheck_data.proc_debug == 1) {
-		FTS_INFO("In apk/adb command mode, not check esd");
+		printk("FocaltechTS:In apk/adb command mode, not check esd");
 		return 0;
 	}
 
@@ -427,7 +427,7 @@ int fts_create_esd_sysfs(struct device *dev)
 
 	ret = sysfs_create_group(&dev->kobj, &fts_esd_group);
 	if (ret != 0) {
-		FTS_ERROR("fts_create_esd_sysfs(sysfs) create fail");
+		printk("ERR: FocaltechTS:fts_create_esd_sysfs(sysfs) create fail");
 		sysfs_remove_group(&dev->kobj, &fts_esd_group);
 		return ret;
 	}
@@ -441,7 +441,7 @@ int fts_esdcheck_init(struct fts_ts_data *ts_data)
 	if (ts_data->ts_workqueue) {
 		INIT_DELAYED_WORK(&ts_data->esdcheck_work, esdcheck_func);
 	} else {
-		FTS_ERROR("fts workqueue is NULL, can't run esd check function");
+		printk("ERR: FocaltechTS:fts workqueue is NULL, can't run esd check function");
 		return -EINVAL;
 	}
 

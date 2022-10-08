@@ -230,7 +230,7 @@ static int fts_create_gesture_sysfs(struct device *dev)
 
 	ret = sysfs_create_group(&dev->kobj, &fts_gesture_group);
 	if (ret) {
-		FTS_ERROR("gesture sys node create fail");
+		printk("ERROR: FocaltechTS:gesture sys node create fail");
 		sysfs_remove_group(&dev->kobj, &fts_gesture_group);
 		return ret;
 	}
@@ -331,7 +331,7 @@ int fts_gesture_readdata(struct fts_ts_data *ts_data, u8 *data)
 	}
 
 	if (!data) {
-		FTS_ERROR("gesture data buffer is null");
+		printk("ERROR: FocaltechTS:gesture data buffer is null");
 		ret = -EINVAL;
 		return ret;
 	}
@@ -352,10 +352,10 @@ int fts_gesture_readdata(struct fts_ts_data *ts_data, u8 *data)
 	FTS_DEBUG("gesture_id=%d, point_num=%d", gesture->gesture_id, gesture->point_num);
 
 	if (gesture->gesture_id == GESTURE_DOUBLECLICK && !(ts_data->gesture_status & 0x01)) {
-		FTS_INFO("double click is not enabled!");
+		printk("FocaltechTS:double click is not enabled!");
 		return 0;
 	} else if (gesture->gesture_id == GESTURE_SINGLETAP && !(ts_data->gesture_status & 0x02)) {
-		FTS_INFO("single tap is not enabled!");
+		printk("FocaltechTS:single tap is not enabled!");
 		return 0;
 	}
 
@@ -412,9 +412,9 @@ int fts_gesture_suspend(struct fts_ts_data *ts_data)
 	}
 
 	if (i >= 5)
-		FTS_ERROR("make IC enter into gesture(suspend) fail,state:%x", state);
+		printk("ERROR: FocaltechTS:make IC enter into gesture(suspend) fail,state:%x", state);
 	else
-		FTS_INFO("Enter into gesture(suspend) successfully");
+		printk("FocaltechTS:Enter into gesture(suspend) successfully");
 
 	FTS_FUNC_EXIT();
 	return 0;
@@ -439,9 +439,9 @@ int fts_gesture_resume(struct fts_ts_data *ts_data)
 	}
 
 	if (i >= 5)
-		FTS_ERROR("make IC exit gesture(resume) fail,state:%x", state);
+		printk("ERROR: FocaltechTS:make IC exit gesture(resume) fail,state:%x", state);
 	else
-		FTS_INFO("resume from gesture successfully");
+		printk("FocaltechTS:resume from gesture successfully");
 
 	FTS_FUNC_EXIT();
 	return 0;
@@ -490,7 +490,7 @@ int fts_gesture_init(struct fts_ts_data *ts_data)
 #ifdef CONFIG_TOUCHSCREEN_COMMON
 	ret = tp_common_set_double_tap_ops(&double_tap_ops);
 	if (ret < 0)
-        	FTS_ERROR("%s: Failed to create double_tap node err=%d\n",
+        	printk("ERROR: FocaltechTS:%s: Failed to create double_tap node err=%d\n",
 			__func__, ret);
 #endif
 

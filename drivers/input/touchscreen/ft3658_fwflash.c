@@ -54,14 +54,14 @@ static int fts_ft5652_upgrade(u8 *buf, u32 len)
 	int ecc_in_tp = 0;
 
 	if ((NULL == buf) || (len < FTS_MIN_LEN)) {
-		printk(KERN_CRIT"buffer/len(%x) is invalid", len);
+		printk(KERN_CRIT "focaltech:buffer/len(%x) is invalid", len);
 		return -EINVAL;
 	}
 
 	/* enter into upgrade environment */
 	ret = fts_fwupg_enter_into_boot();
 	if (ret < 0) {
-		printk(KERN_CRIT"enter into pramboot/bootloader fail,ret=%d", ret);
+		printk(KERN_CRIT "focaltech:enter into pramboot/bootloader fail,ret=%d", ret);
 		goto fw_reset;
 	}
 
@@ -71,7 +71,7 @@ static int fts_ft5652_upgrade(u8 *buf, u32 len)
 	cmd[3] = BYTE_OFF_0(len);
 	ret = fts_write(cmd, FTS_CMD_DATA_LEN_LEN);
 	if (ret < 0) {
-		printk(KERN_CRIT"data len cmd write fail");
+		printk(KERN_CRIT "focaltech:data len cmd write fail");
 		goto fw_reset;
 	}
 
@@ -79,14 +79,14 @@ static int fts_ft5652_upgrade(u8 *buf, u32 len)
 	cmd[1] = FLASH_MODE_UPGRADE_VALUE;
 	ret = fts_write(cmd, 2);
 	if (ret < 0) {
-		printk(KERN_CRIT"upgrade mode(09) cmd write fail");
+		printk(KERN_CRIT "focaltech:upgrade mode(09) cmd write fail");
 		goto fw_reset;
 	}
 
 	delay = FTS_DELAY_ERASE_PAGE_2K * (len / FTS_SIZE_PAGE_2K);
 	ret = fts_fwupg_erase(delay);
 	if (ret < 0) {
-		printk(KERN_CRIT"erase cmd write fail");
+		printk(KERN_CRIT "focaltech:erase cmd write fail");
 		goto fw_reset;
 	}
 
@@ -94,20 +94,20 @@ static int fts_ft5652_upgrade(u8 *buf, u32 len)
 	start_addr = upgrade_func_ft5652.appoff;
 	ecc_in_host = fts_flash_write_buf(start_addr, buf, len, 1);
 	if (ecc_in_host < 0 ) {
-		printk(KERN_CRIT"flash write fail");
+		printk(KERN_CRIT "focaltech:flash write fail");
 		goto fw_reset;
 	}
 
 	/* ecc */
 	ecc_in_tp = fts_fwupg_ecc_cal(start_addr, len);
 	if (ecc_in_tp < 0 ) {
-		printk(KERN_CRIT"ecc read fail");
+		printk(KERN_CRIT "focaltech:ecc read fail");
 		goto fw_reset;
 	}
 
 	printk(KERN_INFO "ecc in tp:%x, host:%x", ecc_in_tp, ecc_in_host);
 	if (ecc_in_tp != ecc_in_host) {
-		printk(KERN_CRIT"ecc check fail");
+		printk(KERN_CRIT "focaltech:ecc check fail");
 		goto fw_reset;
 	}
 
@@ -124,7 +124,7 @@ fw_reset:
 	printk(KERN_INFO "upgrade fail, reset to normal boot");
 	ret = fts_fwupg_reset_in_boot();
 	if (ret < 0) {
-		printk(KERN_CRIT"reset to normal boot fail");
+		printk(KERN_CRIT "focaltech:reset to normal boot fail");
 	}
 	return -EIO;
 }

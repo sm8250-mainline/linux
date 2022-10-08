@@ -45,7 +45,6 @@
 #define FTS_SUSPEND_LEVEL 1     /* Early-suspend level */
 #endif
 #include "ft3658_core.h"
-
 /*****************************************************************************
 * Private constant and macro definitions using #define
 *****************************************************************************/
@@ -114,7 +113,7 @@ int fts_wait_tp_to_valid(void)
 		if ((ret < 0) || (idh != chip_idh) || (idl != chip_idl)) {
 			FTS_DEBUG("TP Not Ready,ReadData:0x%02x%02x", idh, idl);
 		} else if ((idh == chip_idh) && (idl == chip_idl)) {
-			FTS_INFO("TP Ready,Device ID:0x%02x%02x", idh, idl);
+			printk("FocaltechTS:TP Ready,Device ID:0x%02x%02x", idh, idl);
 			return 0;
 		}
 		cnt++;
@@ -206,13 +205,13 @@ void fts_hid2std(void)
 
 	ret = fts_write(buf, 3);
 	if (ret < 0) {
-		FTS_ERROR("hid2std cmd write fail");
+		printk("ERR: FocaltechTS:hid2std cmd write fail");
 	} else {
 		msleep(10);
 		buf[0] = buf[1] = buf[2] = 0;
 		ret = fts_read(NULL, 0, buf, 3);
 		if (ret < 0) {
-			FTS_ERROR("hid2std cmd read fail");
+			printk("ERR: FocaltechTS:hid2std cmd read fail");
 		} else if ((0xEB == buf[0]) && (0xAA == buf[1]) && (0x08 == buf[2])) {
 			FTS_DEBUG("hidi2c change to stdi2c successful");
 		} else {
@@ -230,7 +229,7 @@ static int fts_get_chip_types(
 	u32 ctype_entries = sizeof(ctype) / sizeof(struct ft_chip_t);
 
 	if ((0x0 == id_h) || (0x0 == id_l)) {
-		FTS_ERROR("id_h/id_l is 0");
+		printk("ERR: FocaltechTS:id_h/id_l is 0");
 		return -EINVAL;
 	}
 
@@ -266,7 +265,7 @@ static int fts_read_bootid(struct fts_ts_data *ts_data, u8 *id)
 	id_cmd[1] = 0x50;
 	ret = fts_write(id_cmd, 2);
 	if (ret < 0) {
-		FTS_ERROR("write 0x50 to F1 fail");
+		printk("ERR: FocaltechTS:write 0x50 to F1 fail");
 		return ret;
 	}
 
@@ -274,7 +273,7 @@ static int fts_read_bootid(struct fts_ts_data *ts_data, u8 *id)
 	id_cmd[1] = FTS_CMD_START2;
 	ret = fts_write(id_cmd, 2);
 	if (ret < 0) {
-		FTS_ERROR("start cmd write fail");
+		printk("ERR: FocaltechTS:start cmd write fail");
 		return ret;
 	}
 
@@ -287,7 +286,7 @@ static int fts_read_bootid(struct fts_ts_data *ts_data, u8 *id)
 		id_cmd_len = FTS_CMD_READ_ID_LEN;
 	ret = fts_read(id_cmd, id_cmd_len, chip_id, 2);
 	if ((ret < 0) || (0x0 == chip_id[0]) || (0x0 == chip_id[1])) {
-		FTS_ERROR("read boot id fail,read:0x%02x%02x", chip_id[0], chip_id[1]);
+		printk("ERR: FocaltechTS:read boot id fail,read:0x%02x%02x", chip_id[0], chip_id[1]);
 		return -EIO;
 	}
 
@@ -336,7 +335,7 @@ static int fts_get_ic_information(struct fts_ts_data *ts_data)
 	} while ((cnt * INTERVAL_READ_REG) < TIMEOUT_READ_REG);
 
 	if ((cnt * INTERVAL_READ_REG) >= TIMEOUT_READ_REG) {
-		FTS_INFO("fw is invalid, need read boot id");
+		printk("FocaltechTS:fw is invalid, need read boot id");
 		if (ts_data->ic_info.hid_supported) {
 			fts_hid2std();
 		}
@@ -344,18 +343,18 @@ static int fts_get_ic_information(struct fts_ts_data *ts_data)
 
 		ret = fts_read_bootid(ts_data, &chip_id[0]);
 		if (ret <  0) {
-			FTS_ERROR("read boot id fail");
+			printk("ERR: FocaltechTS:read boot id fail");
 			return ret;
 		}
 
 		ret = fts_get_chip_types(ts_data, chip_id[0], chip_id[1], INVALID);
 		if (ret < 0) {
-			FTS_ERROR("can't get ic informaton");
+			printk("ERR: FocaltechTS:can't get ic informaton");
 			return ret;
 		}
 	}
 
-	FTS_INFO("get ic information, chip id = 0x%02x%02x",
+	printk("FocaltechTS:get ic information, chip id = 0x%02x%02x",
 			 ts_data->ic_info.ids.chip_idh, ts_data->ic_info.ids.chip_idl);
 
 	return 0;
@@ -372,7 +371,7 @@ static void fts_show_touch_buffer(u8 *data, int datalen)
 
 	tmpbuf = kzalloc(1024, GFP_KERNEL);
 	if (!tmpbuf) {
-		FTS_ERROR("tmpbuf zalloc fail");
+		printk("ERR: FocaltechTS:tmpbuf zalloc fail");
 		return;
 	}
 
@@ -589,7 +588,7 @@ static int fts_input_report_a(struct fts_ts_data *data)
 	if (va_reported) {
 		if (EVENT_NO_DOWN(data)) {
 			if (data->log_level >= 1) {
-				FTS_DEBUG("[A]Points All Up!");
+				printk("[A]Points All Up!");
 			}
 			input_report_key(data->input_dev, BTN_TOUCH, 0);
 			input_mt_sync(data->input_dev);
@@ -613,7 +612,7 @@ static int fts_read_touchdata(struct fts_ts_data *data)
 
 	ret = fts_read(buf, 1, buf + 1, data->pnt_buf_size - 1);
 	if (ret < 0) {
-		FTS_ERROR("touch data(%x) abnormal,ret:%d", buf[1], ret);
+		printk("ERR: FocaltechTS:touch data(%x) abnormal,ret:%d", buf[1], ret);
 		return -EIO;
 	}
 
@@ -625,7 +624,7 @@ static int fts_read_touchdata(struct fts_ts_data *data)
 	if (data->gesture_mode) {
 		ret = fts_gesture_readdata(data, buf + FTS_TOUCH_DATA_LEN);
 		if (0 == ret) {
-			FTS_INFO("succuss to get gesture data in irq handler");
+			printk("FocaltechTS:succuss to get gesture data in irq handler");
 			return 1;
 		}
 	}
@@ -665,7 +664,7 @@ static int fts_read_parse_touchdata(struct fts_ts_data *data)
 	}
 
 	if (data->point_num > max_touch_num) {
-		FTS_INFO("invalid point_num(%d)", data->point_num);
+		printk("FocaltechTS:invalid point_num(%d)", data->point_num);
 		return -EIO;
 	}
 
@@ -675,7 +674,7 @@ static int fts_read_parse_touchdata(struct fts_ts_data *data)
 		if (pointid >= FTS_MAX_ID)
 			break;
 		else if (pointid >= max_touch_num) {
-			FTS_ERROR("ID(%d) beyond max_touch_number", pointid);
+			printk("ERR: FocaltechTS:ID(%d) beyond max_touch_number", pointid);
 			return -EINVAL;
 		}
 
@@ -692,13 +691,13 @@ static int fts_read_parse_touchdata(struct fts_ts_data *data)
 		events[i].p =  buf[FTS_TOUCH_PRE_POS + base] & 0x03;
 
 		if (EVENT_DOWN(events[i].flag) && (data->point_num == 0)) {
-			FTS_INFO("abnormal touch data from fw");
+			printk("FocaltechTS:abnormal touch data from fw");
 			return -EIO;
 		}
 	}
 
 	if (data->touch_point == 0) {
-		FTS_INFO("no touch point information");
+		printk("FocaltechTS:no touch point information");
 		return -EIO;
 	}
 
@@ -745,7 +744,7 @@ static irqreturn_t fts_irq_handler(int irq, void *data)
 				  &ts_data->pm_completion,
 				  msecs_to_jiffies(FTS_TIMEOUT_COMERR_PM));
 		if (!ret) {
-			FTS_ERROR("Bus don't resume from pm(deep),timeout,skip irq");
+			printk("ERR: FocaltechTS:Bus don't resume from pm(deep),timeout,skip irq");
 			return IRQ_HANDLED;
 		}
 	}
@@ -764,7 +763,7 @@ static int fts_irq_registration(struct fts_ts_data *ts_data)
 
 	ts_data->irq = gpio_to_irq(pdata->irq_gpio);
 	pdata->irq_gpio_flags = IRQF_TRIGGER_FALLING | IRQF_ONESHOT;
-	FTS_INFO("irq:%d, flag:%x", ts_data->irq, pdata->irq_gpio_flags);
+	printk("FocaltechTS:irq:%d, flag:%x", ts_data->irq, pdata->irq_gpio_flags);
 	ret = request_threaded_irq(ts_data->irq, NULL, fts_irq_handler,
 							   pdata->irq_gpio_flags,
 							   FTS_DRIVER_NAME, ts_data);
@@ -782,7 +781,7 @@ static int fts_input_init(struct fts_ts_data *ts_data)
 	FTS_FUNC_ENTER();
 	input_dev = input_allocate_device();
 	if (!input_dev) {
-		FTS_ERROR("Failed to allocate memory for input device");
+		printk("ERR: FocaltechTS:Failed to allocate memory for input device");
 		return -ENOMEM;
 	}
 
@@ -805,7 +804,7 @@ static int fts_input_init(struct fts_ts_data *ts_data)
 	input_set_capability(input_dev, EV_KEY, KEY_GOTO);
 
 	if (pdata->have_key) {
-		FTS_INFO("set key capabilities");
+		printk("FocaltechTS:set key capabilities");
 		for (key_num = 0; key_num < pdata->key_number; key_num++)
 			input_set_capability(input_dev, EV_KEY, pdata->keys[key_num]);
 	}
@@ -823,7 +822,7 @@ static int fts_input_init(struct fts_ts_data *ts_data)
 
 	ret = input_register_device(input_dev);
 	if (ret) {
-		FTS_ERROR("Input device registration failed");
+		printk("ERR: FocaltechTS:Input device registration failed");
 		input_set_drvdata(input_dev, NULL);
 		input_free_device(input_dev);
 		input_dev = NULL;
@@ -846,14 +845,14 @@ static int fts_report_buffer_init(struct fts_ts_data *ts_data)
 
 	ts_data->point_buf = (u8 *)kzalloc(ts_data->pnt_buf_size + 1, GFP_KERNEL);
 	if (!ts_data->point_buf) {
-		FTS_ERROR("failed to alloc memory for point buf");
+		printk("ERR: FocaltechTS:failed to alloc memory for point buf");
 		return -ENOMEM;
 	}
 
 	events_num = point_num * sizeof(struct ts_event);
 	ts_data->events = (struct ts_event *)kzalloc(events_num, GFP_KERNEL);
 	if (!ts_data->events) {
-		FTS_ERROR("failed to alloc memory for point events");
+		printk("ERR: FocaltechTS:failed to alloc memory for point events");
 		kfree_safe(ts_data->point_buf);
 		return -ENOMEM;
 	}
@@ -872,28 +871,28 @@ static int fts_pinctrl_init(struct fts_ts_data *ts)
 
 	ts->pinctrl = devm_pinctrl_get(ts->dev);
 	if (IS_ERR_OR_NULL(ts->pinctrl)) {
-		FTS_ERROR("Failed to get pinctrl, please check dts");
+		printk("ERR: FocaltechTS:Failed to get pinctrl, please check dts");
 		ret = PTR_ERR(ts->pinctrl);
 		goto err_pinctrl_get;
 	}
 
 	ts->pins_active = pinctrl_lookup_state(ts->pinctrl, "pmx_ts_active");
 	if (IS_ERR_OR_NULL(ts->pins_active)) {
-		FTS_ERROR("Pin state[active] not found");
+		printk("ERR: FocaltechTS:Pin state[active] not found");
 		ret = PTR_ERR(ts->pins_active);
 		goto err_pinctrl_lookup;
 	}
 
 	ts->pins_suspend = pinctrl_lookup_state(ts->pinctrl, "pmx_ts_suspend");
 	if (IS_ERR_OR_NULL(ts->pins_suspend)) {
-		FTS_ERROR("Pin state[suspend] not found");
+		printk("ERR: FocaltechTS:Pin state[suspend] not found");
 		ret = PTR_ERR(ts->pins_suspend);
 		goto err_pinctrl_lookup;
 	}
 
 	ts->pins_release = pinctrl_lookup_state(ts->pinctrl, "pmx_ts_release");
 	if (IS_ERR_OR_NULL(ts->pins_release)) {
-		FTS_ERROR("Pin state[release] not found");
+		printk("ERR: FocaltechTS:Pin state[release] not found");
 		ret = PTR_ERR(ts->pins_release);
 	}
 
@@ -917,7 +916,7 @@ static int fts_pinctrl_select_normal(struct fts_ts_data *ts)
 	if (ts->pinctrl && ts->pins_active) {
 		ret = pinctrl_select_state(ts->pinctrl, ts->pins_active);
 		if (ret < 0) {
-			FTS_ERROR("Set normal pin state error:%d", ret);
+			printk("ERR: FocaltechTS:Set normal pin state error:%d", ret);
 		}
 	}
 
@@ -931,7 +930,7 @@ static int fts_pinctrl_select_suspend(struct fts_ts_data *ts)
 	if (ts->pinctrl && ts->pins_suspend) {
 		ret = pinctrl_select_state(ts->pinctrl, ts->pins_suspend);
 		if (ret < 0) {
-			FTS_ERROR("Set suspend pin state error:%d", ret);
+			printk("ERR: FocaltechTS:Set suspend pin state error:%d", ret);
 		}
 	}
 
@@ -949,7 +948,7 @@ static int fts_pinctrl_select_release(struct fts_ts_data *ts)
 		} else {
 			ret = pinctrl_select_state(ts->pinctrl, ts->pins_release);
 			if (ret < 0)
-				FTS_ERROR("Set gesture pin state error:%d", ret);
+				printk("ERR: FocaltechTS:Set gesture pin state error:%d", ret);
 		}
 	}
 
@@ -962,7 +961,7 @@ static int fts_power_source_ctrl(struct fts_ts_data *ts_data, int enable)
 	int ret = 0;
 
 	if (IS_ERR_OR_NULL(ts_data->vdd)) {
-		FTS_ERROR("vdd is invalid");
+		printk("ERR: FocaltechTS:vdd is invalid");
 		return -EINVAL;
 	}
 
@@ -975,14 +974,14 @@ static int fts_power_source_ctrl(struct fts_ts_data *ts_data, int enable)
 			if (!IS_ERR_OR_NULL(ts_data->vcc_i2c)) {
 				ret = regulator_enable(ts_data->vcc_i2c);
 				if (ret) {
-					FTS_ERROR("enable vcc_i2c regulator failed,ret=%d", ret);
+					printk("ERR: FocaltechTS:enable vcc_i2c regulator failed,ret=%d", ret);
 				}
 			}
 			msleep(1);
 
 			ret = regulator_enable(ts_data->vdd);
 			if (ret) {
-				FTS_ERROR("enable vdd regulator failed,ret=%d", ret);
+				printk("ERR: FocaltechTS:enable vdd regulator failed,ret=%d", ret);
 			}
 
 			ts_data->power_disabled = false;
@@ -994,12 +993,12 @@ static int fts_power_source_ctrl(struct fts_ts_data *ts_data, int enable)
 			msleep(1);
 			ret = regulator_disable(ts_data->vdd);
 			if (ret) {
-				FTS_ERROR("disable vdd regulator failed,ret=%d", ret);
+				printk("ERR: FocaltechTS:disable vdd regulator failed,ret=%d", ret);
 			}
 			if (!IS_ERR_OR_NULL(ts_data->vcc_i2c)) {
 				ret = regulator_disable(ts_data->vcc_i2c);
 				if (ret) {
-					FTS_ERROR("disable vcc_i2c regulator failed,ret=%d", ret);
+					printk("ERR: FocaltechTS:disable vcc_i2c regulator failed,ret=%d", ret);
 				}
 			}
 			ts_data->power_disabled = true;
@@ -1028,7 +1027,7 @@ static int fts_power_source_init(struct fts_ts_data *ts_data)
 	ts_data->vdd = regulator_get(ts_data->dev, "vdd");
 	if (IS_ERR_OR_NULL(ts_data->vdd)) {
 		ret = PTR_ERR(ts_data->vdd);
-		FTS_ERROR("get vdd regulator failed,ret=%d", ret);
+		printk("ERR: FocaltechTS:get vdd regulator failed,ret=%d", ret);
 		return ret;
 	}
 
@@ -1036,14 +1035,14 @@ static int fts_power_source_init(struct fts_ts_data *ts_data)
 		ret = regulator_set_voltage(ts_data->vdd, FTS_VTG_MIN_UV,
 								FTS_VTG_MAX_UV);
 		if (ret) {
-			FTS_ERROR("vdd regulator set_vtg failed ret=%d", ret);
+			printk("ERR: FocaltechTS:vdd regulator set_vtg failed ret=%d", ret);
 			regulator_put(ts_data->vdd);
 			return ret;
 		}
 
 		ret = regulator_set_load(ts_data->vdd, FTS_VTG_MAX_UA);
 		if (ret) {
-			FTS_ERROR("vdd regulator set_load failed ret=%d", ret);
+			printk("ERR: FocaltechTS:vdd regulator set_load failed ret=%d", ret);
 			regulator_put(ts_data->vdd);
 			return ret;
 		}
@@ -1056,7 +1055,7 @@ static int fts_power_source_init(struct fts_ts_data *ts_data)
 							FTS_I2C_VTG_MIN_UV,
 							FTS_I2C_VTG_MAX_UV);
 			if (ret) {
-				FTS_ERROR("vcc_i2c regulator set_vtg failed,ret=%d", ret);
+				printk("ERR: FocaltechTS:vcc_i2c regulator set_vtg failed,ret=%d", ret);
 				regulator_put(ts_data->vcc_i2c);
 			}
 		}
@@ -1070,7 +1069,7 @@ static int fts_power_source_init(struct fts_ts_data *ts_data)
 	ts_data->power_disabled = true;
 	ret = fts_power_source_ctrl(ts_data, ENABLE);
 	if (ret) {
-		FTS_ERROR("fail to enable power(regulator)");
+		printk("ERR: FocaltechTS:fail to enable power(regulator)");
 	}
 
 	FTS_FUNC_EXIT();
@@ -1106,7 +1105,7 @@ static int fts_power_source_suspend(struct fts_ts_data *ts_data)
 
 	ret = fts_power_source_ctrl(ts_data, DISABLE);
 	if (ret < 0) {
-		FTS_ERROR("power off fail, ret=%d", ret);
+		printk("ERR: FocaltechTS:power off fail, ret=%d", ret);
 	}
 
 #if FTS_PINCTRL_EN
@@ -1126,7 +1125,7 @@ static int fts_power_source_resume(struct fts_ts_data *ts_data)
 
 	ret = fts_power_source_ctrl(ts_data, ENABLE);
 	if (ret < 0) {
-		FTS_ERROR("power on fail, ret=%d", ret);
+		printk("ERR: FocaltechTS:power on fail, ret=%d", ret);
 	}
 
 	return ret;
@@ -1142,13 +1141,13 @@ static int fts_gpio_configure(struct fts_ts_data *data)
 	if (gpio_is_valid(data->pdata->irq_gpio)) {
 		ret = gpio_request(data->pdata->irq_gpio, "fts_irq_gpio");
 		if (ret) {
-			FTS_ERROR("[GPIO]irq gpio request failed");
+			printk("ERR: FocaltechTS:[GPIO]irq gpio request failed");
 			goto err_irq_gpio_req;
 		}
 
 		ret = gpio_direction_input(data->pdata->irq_gpio);
 		if (ret) {
-			FTS_ERROR("[GPIO]set_direction for irq gpio failed");
+			printk("ERR: FocaltechTS:[GPIO]set_direction for irq gpio failed");
 			goto err_irq_gpio_dir;
 		}
 	}
@@ -1157,13 +1156,13 @@ static int fts_gpio_configure(struct fts_ts_data *data)
 	if (gpio_is_valid(data->pdata->reset_gpio)) {
 		ret = gpio_request(data->pdata->reset_gpio, "fts_reset_gpio");
 		if (ret) {
-			FTS_ERROR("[GPIO]reset gpio request failed");
+			printk("ERR: FocaltechTS:[GPIO]reset gpio request failed");
 			goto err_irq_gpio_dir;
 		}
 
 		ret = gpio_direction_output(data->pdata->reset_gpio, 0);
 		if (ret) {
-			FTS_ERROR("[GPIO]set_direction for reset gpio failed");
+			printk("ERR: FocaltechTS:[GPIO]set_direction for reset gpio failed");
 			goto err_reset_gpio_dir;
 		}
 	}
@@ -1199,13 +1198,13 @@ static int fts_get_dt_coords(struct device *dev, char *name,
 
 	coords_size = prop->length / sizeof(u32);
 	if (coords_size != FTS_COORDS_ARR_SIZE) {
-		FTS_ERROR("invalid:%s, size:%d", name, coords_size);
+		printk("ERR: FocaltechTS:invalid:%s, size:%d", name, coords_size);
 		return -EINVAL;
 	}
 
 	ret = of_property_read_u32_array(np, name, coords, coords_size);
 	if (ret < 0) {
-		FTS_ERROR("Unable to read %s, please check dts", name);
+		printk("ERR: FocaltechTS:Unable to read %s, please check dts", name);
 		pdata->x_min = FTS_X_MIN_DISPLAY_DEFAULT;
 		pdata->y_min = FTS_Y_MIN_DISPLAY_DEFAULT;
 		pdata->x_max = FTS_X_MAX_DISPLAY_DEFAULT;
@@ -1218,7 +1217,7 @@ static int fts_get_dt_coords(struct device *dev, char *name,
 		pdata->y_max = coords[3];
 	}
 
-	FTS_INFO("display x(%d %d) y(%d %d)", pdata->x_min, pdata->x_max,
+	printk("FocaltechTS:display x(%d %d) y(%d %d)", pdata->x_min, pdata->x_max,
 			 pdata->y_min, pdata->y_max);
 	return 0;
 }
@@ -1233,19 +1232,19 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
 
 	ret = fts_get_dt_coords(dev, "focaltech,display-coords", pdata);
 	if (ret < 0)
-		FTS_ERROR("Unable to get display-coords");
+		printk("ERR: FocaltechTS:Unable to get display-coords");
 
 	/* key */
 	pdata->have_key = of_property_read_bool(np, "focaltech,have-key");
 	if (pdata->have_key) {
 		ret = of_property_read_u32(np, "focaltech,key-number", &pdata->key_number);
 		if (ret < 0)
-			FTS_ERROR("Key number undefined!");
+			printk("ERR: FocaltechTS:Key number undefined!");
 
 		ret = of_property_read_u32_array(np, "focaltech,keys",
 										 pdata->keys, pdata->key_number);
 		if (ret < 0)
-			FTS_ERROR("Keys undefined!");
+			printk("ERR: FocaltechTS:Keys undefined!");
 		else if (pdata->key_number > FTS_MAX_KEYS)
 			pdata->key_number = FTS_MAX_KEYS;
 
@@ -1253,15 +1252,15 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
 										 pdata->key_x_coords,
 										 pdata->key_number);
 		if (ret < 0)
-			FTS_ERROR("Key Y Coords undefined!");
+			printk("ERR: FocaltechTS:Key Y Coords undefined!");
 
 		ret = of_property_read_u32_array(np, "focaltech,key-y-coords",
 										 pdata->key_y_coords,
 										 pdata->key_number);
 		if (ret < 0)
-			FTS_ERROR("Key X Coords undefined!");
+			printk("ERR: FocaltechTS:Key X Coords undefined!");
 
-		FTS_INFO("VK Number:%d, key:(%d,%d,%d), "
+		printk("FocaltechTS:VK Number:%d, key:(%d,%d,%d), "
 				 "coords:(%d,%d),(%d,%d),(%d,%d)",
 				 pdata->key_number,
 				 pdata->keys[0], pdata->keys[1], pdata->keys[2],
@@ -1274,16 +1273,16 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
 	pdata->reset_gpio = of_get_named_gpio_flags(np, "focaltech,reset-gpio",
 						0, &pdata->reset_gpio_flags);
 	if (pdata->reset_gpio < 0)
-		FTS_ERROR("Unable to get reset_gpio");
+		printk("ERR: FocaltechTS:Unable to get reset_gpio");
 
 	pdata->irq_gpio = of_get_named_gpio_flags(np, "focaltech,irq-gpio",
 					  0, &pdata->irq_gpio_flags);
 	if (pdata->irq_gpio < 0)
-		FTS_ERROR("Unable to get irq_gpio");
+		printk("ERR: FocaltechTS:Unable to get irq_gpio");
 
 	ret = of_property_read_u32(np, "focaltech,max-touch-number", &temp_val);
 	if (ret < 0) {
-		FTS_ERROR("Unable to get max-touch-number, please check dts");
+		printk("ERR: FocaltechTS:Unable to get max-touch-number, please check dts");
 		pdata->max_touch_number = FTS_MAX_POINTS_SUPPORT;
 	} else {
 		if (temp_val < 2)
@@ -1296,7 +1295,7 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
 
 	ret = of_property_read_u32(np, "focaltech,open-min", &temp_val);
 	if (ret < 0) {
-		FTS_ERROR("Unable to get open-min, please check dts");
+		printk("ERR: FocaltechTS:Unable to get open-min, please check dts");
 		pdata->open_min = FTS_TEST_OPEN_MIN;
 	} else {
 		pdata->open_min = temp_val;
@@ -1306,25 +1305,25 @@ static int fts_parse_dt(struct device *dev, struct fts_ts_platform_data *pdata)
 	ret = of_property_read_u32_array(np, "focaltech,touch-def-array",
 						pdata->touch_def_array, 4);
 	if (ret < 0) {
-		FTS_ERROR("Unable to get touch default array, please check dts");
+		printk("ERR: FocaltechTS:Unable to get touch default array, please check dts");
 		return ret;
 	}
 
 	ret = of_property_read_u32_array(np, "focaltech,touch-range-array",
 						pdata->touch_range_array, 5);
 	if (ret < 0) {
-		FTS_ERROR("Unable to get touch range array, please check dts");
+		printk("ERR: FocaltechTS:Unable to get touch range array, please check dts");
 		return ret;
 	}
 
 	ret = of_property_read_u32_array(np, "focaltech,touch-expert-array",
 						pdata->touch_expert_array, 4 * EXPERT_ARRAY_SIZE);
 	if (ret < 0) {
-		FTS_ERROR("Unable to get touch expert array, please check dts");
+		printk("ERR: FocaltechTS:Unable to get touch expert array, please check dts");
 		return ret;
 	}
 #endif
-	FTS_INFO("max touch number:%d, irq gpio:%d, reset gpio:%d",
+	printk("FocaltechTS:max touch number:%d, irq gpio:%d, reset gpio:%d",
 			 pdata->max_touch_number, pdata->irq_gpio, pdata->reset_gpio);
 
 	FTS_FUNC_EXIT();
@@ -1349,7 +1348,7 @@ static int drm_notifier_callback(struct notifier_block *self,
 	int blank;
 
 	if (!ts_data || !evdata || !evdata->data || evdata->id != 0) {
-		FTS_ERROR("evdata is null");
+		printk("ERR: FocaltechTS:evdata is null");
 		goto exit;
 	}
 
@@ -1358,7 +1357,7 @@ static int drm_notifier_callback(struct notifier_block *self,
 	}
 
 	blank = *(int *)(evdata->data);
-	FTS_INFO("DRM event:%lu, blank:%d", event, blank);
+	printk("FocaltechTS:DRM event:%lu, blank:%d", event, blank);
 
 	if (blank == MI_DRM_BLANK_UNBLANK) {
 		queue_work(fts_data->ts_workqueue, &fts_data->resume_work);
@@ -1515,7 +1514,7 @@ static void fts_power_supply_work(struct work_struct *work)
 		return;
 #if defined(CONFIG_PM) && FTS_PATCH_COMERR_PM
 	if (ts_data->pm_suspend) {
-		FTS_ERROR("TP is in suspend mode, don't set usb status!");
+		printk("ERR: FocaltechTS:TP is in suspend mode, don't set usb status!");
 		return;
 	}
 #endif
@@ -1524,17 +1523,17 @@ static void fts_power_supply_work(struct work_struct *work)
 	charger_mode = !!power_supply_is_system_supplied();
 	if (charger_mode != ts_data->charger_mode) {
 		ts_data->charger_mode = charger_mode;
-		FTS_INFO("%s %d\n", __func__, charger_mode);
+		printk("FocaltechTS:%s %d\n", __func__, charger_mode);
 		if (charger_mode) {
-			FTS_INFO("%s USB is exist\n", __func__);
+			printk("FocaltechTS:%s USB is exist\n", __func__);
 			ret = fts_write_reg(FTS_REG_CHARGER_MODE_EN, 1);
 			if (ret < 0)
-				FTS_ERROR("set power supply exist fail, ret=%d", ret);
+				printk("ERR: FocaltechTS:set power supply exist fail, ret=%d", ret);
 		} else {
-			FTS_INFO("%s USB is not exist\n", __func__);
+			printk("FocaltechTS:%s USB is not exist\n", __func__);
 			ret = fts_write_reg(FTS_REG_CHARGER_MODE_EN, 0);
 			if (ret < 0)
-				FTS_ERROR("set power supply not exist fail, ret=%d", ret);
+				printk("ERR: FocaltechTS:set power supply not exist fail, ret=%d", ret);
 		}
 	}
 	mutex_unlock(&ts_data->power_supply_lock);
@@ -1547,29 +1546,29 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
 	int pdata_size = sizeof(struct fts_ts_platform_data);
 
 	FTS_FUNC_ENTER();
-	FTS_INFO("%s", FTS_DRIVER_VERSION);
+	printk("FocaltechTS:%s", FTS_DRIVER_VERSION);
 	ts_data->pdata = kzalloc(pdata_size, GFP_KERNEL);
 	if (!ts_data->pdata) {
-		FTS_ERROR("allocate memory for platform_data fail");
+		printk("ERR: FocaltechTS:allocate memory for platform_data fail");
 		return -ENOMEM;
 	}
 
 	if (ts_data->dev->of_node) {
 		ret = fts_parse_dt(ts_data->dev, ts_data->pdata);
 		if (ret)
-			FTS_ERROR("device-tree parse fail");
+			printk("ERR: FocaltechTS:device-tree parse fail");
 	} else {
 		if (ts_data->dev->platform_data) {
 			memcpy(ts_data->pdata, ts_data->dev->platform_data, pdata_size);
 		} else {
-			FTS_ERROR("platform_data is null");
+			printk("ERR: FocaltechTS:platform_data is null");
 			return -ENODEV;
 		}
 	}
 
 	ts_data->ts_workqueue = create_singlethread_workqueue("fts_wq");
 	if (!ts_data->ts_workqueue) {
-		FTS_ERROR("create fts workqueue fail");
+		printk("ERR: FocaltechTS:create fts workqueue fail");
 	}
 
 	spin_lock_init(&ts_data->irq_lock);
@@ -1579,32 +1578,32 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
 	/* Init communication interface */
 	ret = fts_bus_init(ts_data);
 	if (ret) {
-		FTS_ERROR("bus initialize fail");
+		printk("ERR: FocaltechTS:bus initialize fail");
 		goto err_bus_init;
 	}
 
 	ret = fts_input_init(ts_data);
 	if (ret) {
-		FTS_ERROR("input initialize fail");
+		printk("ERR: FocaltechTS:input initialize fail");
 		goto err_input_init;
 	}
 
 	ret = fts_report_buffer_init(ts_data);
 	if (ret) {
-		FTS_ERROR("report buffer init fail");
+		printk("ERR: FocaltechTS:report buffer init fail");
 		goto err_report_buffer;
 	}
 
 	ret = fts_gpio_configure(ts_data);
 	if (ret) {
-		FTS_ERROR("configure the gpios fail");
+		printk("ERR: FocaltechTS:configure the gpios fail");
 		goto err_gpio_config;
 	}
 
 #if FTS_POWER_SOURCE_CUST_EN
 	ret = fts_power_source_init(ts_data);
 	if (ret) {
-		FTS_ERROR("fail to get power(regulator)");
+		printk("ERR: FocaltechTS:fail to get power(regulator)");
 		goto err_power_init;
 	}
 #endif
@@ -1615,69 +1614,69 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
 
 	ret = fts_get_ic_information(ts_data);
 	if (ret) {
-		FTS_ERROR("not focal IC, unregister driver");
+		printk("ERR: FocaltechTS:not focal IC, unregister driver");
 		goto err_irq_req;
 	}
 
 	ret = fts_create_proc(ts_data);
 	if (ret) {
-		FTS_ERROR("create proc node fail");
+		printk("ERR: FocaltechTS:create proc node fail");
 	}
 
 	ret = fts_create_sysfs(ts_data);
 	if (ret) {
-		FTS_ERROR("create sysfs node fail");
+		printk("ERR: FocaltechTS:create sysfs node fail");
 	}
 
 	ts_data->tpdbg_dentry = debugfs_create_dir("tp_debug", NULL);
 	if (IS_ERR_OR_NULL(ts_data->tpdbg_dentry)) {
-		FTS_ERROR("create tp_debug dir fail");
+		printk("ERR: FocaltechTS:create tp_debug dir fail");
 	}
 	if (IS_ERR_OR_NULL(debugfs_create_file("switch_state", 0660,
 				ts_data->tpdbg_dentry, ts_data, &tpdbg_operations))) {
-		FTS_ERROR("create switch_state fail");
+		printk("ERR: FocaltechTS:create switch_state fail");
 	}
 
 #if FTS_POINT_REPORT_CHECK_EN
 	ret = fts_point_report_check_init(ts_data);
 	if (ret) {
-		FTS_ERROR("init point report check fail");
+		printk("ERR: FocaltechTS:init point report check fail");
 	}
 #endif
 
 	ret = fts_ex_mode_init(ts_data);
 	if (ret) {
-		FTS_ERROR("init glove/cover/charger fail");
+		printk("ERR: FocaltechTS:init glove/cover/charger fail");
 	}
 
 	ret = fts_gesture_init(ts_data);
 	if (ret) {
-		FTS_ERROR("init gesture fail");
+		printk("ERR: FocaltechTS:init gesture fail");
 	}
 
 #if FTS_TEST_EN
 	ret = fts_test_init(ts_data);
 	if (ret) {
-		FTS_ERROR("init production test fail");
+		printk("ERR: FocaltechTS:init production test fail");
 	}
 #endif
 
 #if FTS_ESDCHECK_EN
 	ret = fts_esdcheck_init(ts_data);
 	if (ret) {
-		FTS_ERROR("init esd check fail");
+		printk("ERR: FocaltechTS:init esd check fail");
 	}
 #endif
 
 	ret = fts_irq_registration(ts_data);
 	if (ret) {
-		FTS_ERROR("request irq failed");
+		printk("ERR: FocaltechTS:request irq failed");
 		goto err_irq_req;
 	}
 
 	ret = fts_fwupg_init(ts_data);
 	if (ret) {
-		FTS_ERROR("init fw upgrade fail");
+		printk("ERR: FocaltechTS:init fw upgrade fail");
 	}
 
 	if (ts_data->ts_workqueue) {
@@ -1695,7 +1694,7 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
 	ts_data->fb_notif.notifier_call = drm_notifier_callback;
 	ret = mi_drm_register_client(&ts_data->fb_notif);
 	if (ret) {
-		FTS_ERROR("[DRM]Unable to register fb_notifier: %d\n", ret);
+		printk("ERR: FocaltechTS:[DRM]Unable to register fb_notifier: %d\n", ret);
 	}
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 	ts_data->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + FTS_SUSPEND_LEVEL;
@@ -1776,7 +1775,7 @@ static int fts_ts_remove_entry(struct fts_ts_data *ts_data)
 
 #if defined(CONFIG_DRM)
 	if (mi_drm_unregister_client(&ts_data->fb_notif))
-		FTS_ERROR("[DRM]Error occurred while unregistering fb_notifier.\n");
+		printk("ERR: FocaltechTS:[DRM]Error occurred while unregistering fb_notifier.\n");
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 	unregister_early_suspend(&ts_data->early_suspend);
 #endif
@@ -1809,18 +1808,18 @@ static int fts_ts_suspend(struct device *dev)
 
 	FTS_FUNC_ENTER();
 	if (ts_data->suspended) {
-		FTS_INFO("Already in suspend state");
+		printk("FocaltechTS:Already in suspend state");
 		return 0;
 	}
 
 	if (ts_data->fw_loading) {
-		FTS_INFO("fw upgrade in process, can't suspend");
+		printk("FocaltechTS:fw upgrade in process, can't suspend");
 		return 0;
 	}
 
 #ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
 	if (ts_data->palm_sensor_switch) {
-		FTS_INFO("palm sensor ON, switch to OFF");
+		printk("FocaltechTS:palm sensor ON, switch to OFF");
 		update_palm_sensor_value(0);
 		fts_palm_sensor_cmd(0);
 	}
@@ -1835,16 +1834,16 @@ static int fts_ts_suspend(struct device *dev)
 	} else {
 		fts_irq_disable();
 
-		FTS_INFO("make TP enter into sleep mode");
+		printk("FocaltechTS:make TP enter into sleep mode");
 		ret = fts_write_reg(FTS_REG_POWER_MODE, FTS_REG_POWER_MODE_SLEEP);
 		if (ret < 0)
-			FTS_ERROR("set TP to sleep mode fail, ret=%d", ret);
+			printk("ERR: FocaltechTS:set TP to sleep mode fail, ret=%d", ret);
 
 		if (!ts_data->ic_info.is_incell && ts_data->poweroff_on_sleep) {
 #if FTS_POWER_SOURCE_CUST_EN
 			ret = fts_power_source_suspend(ts_data);
 			if (ret < 0) {
-				FTS_ERROR("power enter suspend fail");
+				printk("ERR: FocaltechTS:power enter suspend fail");
 			}
 #endif
 		}
@@ -1884,7 +1883,7 @@ static int fts_ts_resume(struct device *dev)
 
 #ifdef CONFIG_TOUCHSCREEN_XIAOMI_TOUCHFEATURE
 	if (ts_data->palm_sensor_switch) {
-		FTS_INFO("palm sensor OFF, switch to ON");
+		printk("FocaltechTS:palm sensor OFF, switch to ON");
 		fts_palm_sensor_cmd(1);
 	}
 #endif
@@ -1906,7 +1905,7 @@ static int fts_pm_suspend(struct device *dev)
 {
 	struct fts_ts_data *ts_data = dev_get_drvdata(dev);
 
-	FTS_INFO("system enters into pm_suspend");
+	printk("FocaltechTS:system enters into pm_suspend");
 	ts_data->pm_suspend = true;
 	reinit_completion(&ts_data->pm_completion);
 	return 0;
@@ -1916,7 +1915,7 @@ static int fts_pm_resume(struct device *dev)
 {
 	struct fts_ts_data *ts_data = dev_get_drvdata(dev);
 
-	FTS_INFO("system resumes from pm_suspend");
+	printk("FocaltechTS:system resumes from pm_suspend");
 	ts_data->pm_suspend = false;
 	complete(&ts_data->pm_completion);
 	return 0;
@@ -1931,7 +1930,7 @@ static const struct dev_pm_ops fts_dev_pm_ops = {
 void fts_update_gesture_state(struct fts_ts_data *ts_data, int bit, bool enable)
 {
 	if (ts_data->suspended) {
-		FTS_ERROR("TP is suspended, do not update gesture state");
+		printk("ERR: FocaltechTS:TP is suspended, do not update gesture state");
 		return;
 	}
 	mutex_lock(&ts_data->input_dev->mutex);
@@ -1939,7 +1938,7 @@ void fts_update_gesture_state(struct fts_ts_data *ts_data, int bit, bool enable)
 		ts_data->gesture_status |= 1 << bit;
 	else
 		ts_data->gesture_status &= ~(1 << bit);
-	FTS_INFO("gesture state:0x%02X", ts_data->gesture_status);
+	printk("FocaltechTS:gesture state:0x%02X", ts_data->gesture_status);
 	ts_data->gesture_mode = ts_data->gesture_status != 0 ? ENABLE : DISABLE;
 	mutex_unlock(&ts_data->input_dev->mutex);
 }
@@ -1954,7 +1953,7 @@ static void fts_read_palm_data(u8 reg_value)
 	else if (reg_value == 0x80)
 		update_palm_sensor_value(0);
 	if (reg_value == 0x40 || reg_value == 0x80)
-		FTS_INFO("update palm data:0x%02X", reg_value);
+		printk("FocaltechTS:update palm data:0x%02X", reg_value);
 }
 
 static int fts_palm_sensor_cmd(int value)
@@ -1964,9 +1963,9 @@ static int fts_palm_sensor_cmd(int value)
 	ret = fts_write_reg(FTS_PALM_EN, value ? FTS_PALM_ON : FTS_PALM_OFF);
 
 	if (ret < 0)
-		FTS_ERROR("Set palm sensor switch failed!\n");
+		printk("ERR: FocaltechTS:Set palm sensor switch failed!\n");
 	else
-		FTS_INFO("Set palm sensor switch: %d\n", value);
+		printk("FocaltechTS:Set palm sensor switch: %d\n", value);
 
 	return ret;
 }
@@ -1985,7 +1984,7 @@ static int fts_palm_sensor_write(int value)
 
 	ret = fts_palm_sensor_cmd(value);
 	if (ret < 0)
-		FTS_ERROR("set palm sensor cmd failed: %d\n", value);
+		printk("ERR: FocaltechTS:set palm sensor cmd failed: %d\n", value);
 	return ret;
 }
 
@@ -2082,7 +2081,7 @@ static void fts_init_touch_mode_data(struct fts_ts_data *ts_data)
 	xiaomi_touch_interfaces.touch_mode[Touch_Edge_Filter][SET_CUR_VALUE] = 2;
 	xiaomi_touch_interfaces.touch_mode[Touch_Edge_Filter][GET_CUR_VALUE] = 2;
 
-	FTS_INFO("touchfeature value init done");
+	printk("FocaltechTS:touchfeature value init done");
 
 	return;
 }
@@ -2143,7 +2142,7 @@ static void fts_update_touchmode_data(struct fts_ts_data *ts_data)
 
 #if defined(CONFIG_PM) && FTS_PATCH_COMERR_PM
 	if (ts_data && ts_data->pm_suspend) {
-		FTS_ERROR("SYSTEM is in suspend mode, don't set touch mode data");
+		printk("ERR: FocaltechTS:SYSTEM is in suspend mode, don't set touch mode data");
 		return;
 	}
 #endif
@@ -2153,9 +2152,9 @@ static void fts_update_touchmode_data(struct fts_ts_data *ts_data)
 	fts_config_game_mode_cmd(ts_data, cmd, ts_data->is_expert_mode);
 	ret = fts_write(cmd, sizeof(cmd));
 	if (ret < 0) {
-		FTS_ERROR("write game mode parameter failed\n");
+		printk("ERR: FocaltechTS:write game mode parameter failed\n");
 	} else {
-		FTS_INFO("update game mode cmd: %02X,%02X,%02X,%02X,%02X,%02X,%02X",
+		printk("FocaltechTS:update game mode cmd: %02X,%02X,%02X,%02X,%02X,%02X,%02X",
 				cmd[0], cmd[1], cmd[2], cmd[3], cmd[4], cmd[5], cmd[6]);
 
 		for (mode = Touch_Game_Mode; mode <= Touch_Expert_Mode; mode++) {
@@ -2188,9 +2187,9 @@ static void fts_update_touchmode_data(struct fts_ts_data *ts_data)
 		}
 		ret = fts_write_reg(mode_addr, mode_set_value);
 		if (ret < 0) {
-			FTS_ERROR("write touch mode:%d reg failed", mode);
+			printk("ERR: FocaltechTS:write touch mode:%d reg failed", mode);
 		} else {
-			FTS_INFO("write touch mode:%d, value: %d, addr:0x%02X",
+			printk("FocaltechTS:write touch mode:%d, value: %d, addr:0x%02X",
 				mode, mode_set_value, mode_addr);
 			xiaomi_touch_interfaces.touch_mode[mode][GET_CUR_VALUE] =
 				xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE];
@@ -2203,9 +2202,9 @@ static void fts_update_touchmode_data(struct fts_ts_data *ts_data)
 		mode_addr = FTS_REG_EDGE_FILTER_LEVEL;
 		ret = fts_write_reg(mode_addr, mode_set_value);
 		if (ret < 0) {
-			FTS_ERROR("write touch mode:%d reg failed", mode);
+			printk("ERR: FocaltechTS:write touch mode:%d reg failed", mode);
 		} else {
-			FTS_INFO("write touch mode:%d, value: %d, addr:0x%02X",
+			printk("FocaltechTS:write touch mode:%d, value: %d, addr:0x%02X",
 				mode, mode_set_value, mode_addr);
 			xiaomi_touch_interfaces.touch_mode[mode][GET_CUR_VALUE] =
 				xiaomi_touch_interfaces.touch_mode[mode][SET_CUR_VALUE];
@@ -2219,10 +2218,10 @@ static void fts_update_touchmode_data(struct fts_ts_data *ts_data)
 static void fts_power_status_handle(struct fts_ts_data *fts_data)
 {
 	if (fts_data->power_status) {
-		FTS_INFO("SuperWallpaper out");
+		printk("FocaltechTS:SuperWallpaper out");
 		queue_work(fts_data->ts_workqueue, &fts_data->resume_work);
 	} else if (!fts_data->power_status) {
-		FTS_INFO("SuperWallpaper in");
+		printk("FocaltechTS:SuperWallpaper in");
 		cancel_work_sync(&fts_data->resume_work);
 		fts_ts_suspend(fts_data->dev);
 	}
@@ -2231,13 +2230,13 @@ static void fts_power_status_handle(struct fts_ts_data *fts_data)
 static int fts_set_cur_value(int mode, int value)
 {
 	if (!fts_data || mode < 0) {
-		FTS_ERROR("Error, fts_data is NULL or the parameter is incorrect");
+		printk("ERR: FocaltechTS:Error, fts_data is NULL or the parameter is incorrect");
 		return -1;
 	}
-	FTS_INFO("touch mode:%d, value:%d", mode, value);
+	printk("FocaltechTS:touch mode:%d, value:%d", mode, value);
 
 	if (mode >= Touch_Mode_NUM) {
-		FTS_ERROR("mode is error:%d", mode);
+		printk("ERR: FocaltechTS:mode is error:%d", mode);
 		return -EINVAL;
 	} else if (mode == Touch_Doubletap_Mode && value >= 0) {
 		fts_update_gesture_state(fts_data, GESTURE_DOUBLETAP, value != 0 ? true : false);
@@ -2274,10 +2273,10 @@ static int fts_reset_mode(int mode)
 	} else if (mode < Touch_Mode_NUM) {
 		fts_restore_mode_value(mode, GET_DEF_VALUE);
 	} else {
-		FTS_ERROR("mode:%d don't support");
+		printk("ERR: FocaltechTS:mode:%d don't support");
 	}
 
-	FTS_INFO("mode:%d reset", mode);
+	printk("FocaltechTS:mode:%d reset", mode);
 
 	fts_update_touchmode_data(fts_data);
 
@@ -2290,9 +2289,9 @@ static int fts_get_mode_value(int mode, int value_type)
 
 	if (mode < Touch_Mode_NUM && mode >= 0) {
 		value = xiaomi_touch_interfaces.touch_mode[mode][value_type];
-		FTS_INFO("mode:%d, value_type:%d, value:%d", mode, value_type, value);
+		printk("FocaltechTS:mode:%d, value_type:%d, value:%d", mode, value_type, value);
 	} else {
-		FTS_ERROR("mode:%d don't support");
+		printk("ERR: FocaltechTS:mode:%d don't support");
 	}
 
 	return value;
@@ -2306,9 +2305,9 @@ static int fts_get_mode_all(int mode, int *value)
 		value[2] = xiaomi_touch_interfaces.touch_mode[mode][GET_MIN_VALUE];
 		value[3] = xiaomi_touch_interfaces.touch_mode[mode][GET_MAX_VALUE];
 	} else {
-		FTS_ERROR("mode:%d don't support", mode);
+		printk("ERR: FocaltechTS:mode:%d don't support", mode);
 	}
-	FTS_INFO("mode:%d, value:%d:%d:%d:%d", mode,
+	printk("FocaltechTS:mode:%d, value:%d:%d:%d:%d", mode,
 				value[0], value[1], value[2], value[3]);
 	return 0;
 }
@@ -2334,7 +2333,7 @@ static void fts_palm_mode_recovery(struct fts_ts_data *ts_data)
 
 	ret = fts_palm_sensor_cmd(ts_data->palm_sensor_switch);
 	if (ret < 0)
-		FTS_ERROR("set palm sensor cmd failed: %d\n", ts_data->palm_sensor_switch);
+		printk("ERR: FocaltechTS:set palm sensor cmd failed: %d\n", ts_data->palm_sensor_switch);
 }
 
 #endif
@@ -2349,19 +2348,19 @@ static int fts_ts_probe(struct spi_device *spi)
 	int ret = 0;
 	struct fts_ts_data *ts_data = NULL;
 
-	FTS_INFO("Touch Screen(SPI BUS) driver prboe...");
+	printk("FocaltechTS:Touch Screen(SPI BUS) driver prboe...");
 	spi->mode = SPI_MODE_0;
 	spi->bits_per_word = 8;
 	ret = spi_setup(spi);
 	if (ret) {
-		FTS_ERROR("spi setup fail");
+		printk("ERR: FocaltechTS:spi setup fail");
 		return ret;
 	}
 
 	/* malloc memory for global struct variable */
 	ts_data = (struct fts_ts_data *)kzalloc(sizeof(*ts_data), GFP_KERNEL);
 	if (!ts_data) {
-		FTS_ERROR("allocate memory for fts_data fail");
+		printk("ERR: FocaltechTS:allocate memory for fts_data fail");
 		return -ENOMEM;
 	}
 
@@ -2376,7 +2375,7 @@ static int fts_ts_probe(struct spi_device *spi)
 
 	ret = fts_ts_probe_entry(ts_data);
 	if (ret) {
-		FTS_ERROR("Touch Screen(SPI BUS) driver probe fail");
+		printk("ERR: FocaltechTS:Touch Screen(SPI BUS) driver probe fail");
 		kfree_safe(ts_data);
 		return ret;
 	}
@@ -2399,7 +2398,7 @@ static int fts_ts_probe(struct spi_device *spi)
 	xiaomitouch_register_modedata(&xiaomi_touch_interfaces);
 #endif
 
-	FTS_INFO("Touch Screen(SPI BUS) driver prboe successfully");
+	printk("FocaltechTS:Touch Screen(SPI BUS) driver prboe successfully");
 	return 0;
 }
 
@@ -2437,16 +2436,19 @@ static int __init fts_ts_init(void)
 	int ret = 0;
 
 	FTS_FUNC_ENTER();
+	pr_info("Started fts driver");
 	ret = spi_register_driver(&fts_ts_driver);
 	if (ret != 0) {
-		FTS_ERROR("Focaltech touch screen driver init failed!");
+		printk(KERN_CRIT "ERR: FocaltechTS:Focaltech touch screen driver init failed!");
 	}
+	pr_info("FTS Exiting with core %i", ret);
 	FTS_FUNC_EXIT();
 	return ret;
 }
 
 static void __exit fts_ts_exit(void)
 {
+	printk("Unregistering driver");
 	spi_unregister_driver(&fts_ts_driver);
 }
 

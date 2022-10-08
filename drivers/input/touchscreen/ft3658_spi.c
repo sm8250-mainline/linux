@@ -86,14 +86,14 @@ static int fts_spi_transfer(u8 *tx_buf, u8 *rx_buf, u32 len)
 
 #if defined(CONFIG_PM) && FTS_PATCH_COMERR_PM
 	if (fts_data && fts_data->pm_suspend) {
-		FTS_ERROR("system suspend, don't transfer.");
+		printk("ERR: FocaltechTS:system suspend, don't transfer.");
 		return -EACCES;
 	}
 #endif
 
 	ret = spi_sync(spi, &msg);
 	if (ret) {
-		FTS_ERROR("spi_sync fail,ret:%d", ret);
+		printk("ERR: FocaltechTS:spi_sync fail,ret:%d", ret);
 		return ret;
 	}
 
@@ -145,7 +145,7 @@ int fts_write(u8 *writebuf, u32 writelen)
 	u32 datalen = writelen - 1;
 
 	if (!writebuf || !writelen) {
-		FTS_ERROR("writebuf/len is invalid");
+		printk("ERR: FocaltechTS:writebuf/len is invalid");
 		return -EINVAL;
 	}
 
@@ -153,14 +153,14 @@ int fts_write(u8 *writebuf, u32 writelen)
 	if (txlen_need > SPI_BUF_LENGTH) {
 		txbuf = kzalloc(txlen_need, GFP_KERNEL);
 		if (NULL == txbuf) {
-			FTS_ERROR("txbuf malloc fail");
+			printk("ERR: FocaltechTS:txbuf malloc fail");
 			ret = -ENOMEM;
 			goto err_write;
 		}
 
 		rxbuf = kzalloc(txlen_need, GFP_KERNEL);
 		if (NULL == rxbuf) {
-			FTS_ERROR("rxbuf malloc fail");
+			printk("ERR: FocaltechTS:rxbuf malloc fail");
 			ret = -ENOMEM;
 			goto err_write;
 		}
@@ -193,7 +193,7 @@ int fts_write(u8 *writebuf, u32 writelen)
 		}
 	}
 	if (ret < 0) {
-		FTS_ERROR("data write(addr:%x) fail,status:%x,ret:%d",
+		printk("ERR: FocaltechTS:data write(addr:%x) fail,status:%x,ret:%d",
 				  writebuf[0], rxbuf[3], ret);
 	}
 
@@ -237,7 +237,7 @@ int fts_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 	u32 dp = 0;
 
 	if (!cmd || !cmdlen || !data || !datalen) {
-		FTS_ERROR("cmd/cmdlen/data/datalen is invalid");
+		printk("ERR: FocaltechTS:cmd/cmdlen/data/datalen is invalid");
 		return -EINVAL;
 	}
 
@@ -245,14 +245,14 @@ int fts_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 	if (txlen_need > SPI_BUF_LENGTH) {
 		txbuf = kzalloc(txlen_need, GFP_KERNEL);
 		if (NULL == txbuf) {
-			FTS_ERROR("txbuf malloc fail");
+			printk("ERR: FocaltechTS:txbuf malloc fail");
 			ret = -ENOMEM;
 			goto err_read;
 		}
 
 		rxbuf = kzalloc(txlen_need, GFP_KERNEL);
 		if (NULL == rxbuf) {
-			FTS_ERROR("rxbuf malloc fail");
+			printk("ERR: FocaltechTS:rxbuf malloc fail");
 			ret = -ENOMEM;
 			goto err_read;
 		}
@@ -297,7 +297,7 @@ int fts_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 	}
 
 	if (ret < 0) {
-		FTS_ERROR("data read(addr:%x) %s,status:%x,ret:%d", cmd[0],
+		printk("ERR: FocaltechTS:data read(addr:%x) %s,status:%x,ret:%d", cmd[0],
 				  (i >= SPI_RETRY_NUMBER) ? "crc abnormal" : "fail",
 				  rxbuf[3], ret);
 	}
@@ -330,13 +330,13 @@ int fts_bus_init(struct fts_ts_data *ts_data)
 	FTS_FUNC_ENTER();
 	ts_data->bus_tx_buf = kzalloc(SPI_BUF_LENGTH, GFP_KERNEL);
 	if (NULL == ts_data->bus_tx_buf) {
-		FTS_ERROR("failed to allocate memory for bus_tx_buf");
+		printk("ERR: FocaltechTS:failed to allocate memory for bus_tx_buf");
 		return -ENOMEM;
 	}
 
 	ts_data->bus_rx_buf = kzalloc(SPI_BUF_LENGTH, GFP_KERNEL);
 	if (NULL == ts_data->bus_rx_buf) {
-		FTS_ERROR("failed to allocate memory for bus_rx_buf");
+		printk("ERR: FocaltechTS:failed to allocate memory for bus_rx_buf");
 		return -ENOMEM;
 	}
 

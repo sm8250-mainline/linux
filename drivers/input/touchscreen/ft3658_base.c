@@ -95,14 +95,14 @@ static ssize_t fts_debug_write(
 	struct ftxxxx_proc *proc = &ts_data->proc;
 
 	if (buflen <= 1) {
-		FTS_ERROR("apk proc wirte count(%d) fail", buflen);
+		printk("ERR: FocaltechTS: apk proc wirte count(%d) fail", buflen);
 		return -EINVAL;
 	}
 
 	if (buflen > PROC_BUF_SIZE) {
 		writebuf = (u8 *)kzalloc(buflen * sizeof(u8), GFP_KERNEL);
 		if (NULL == writebuf) {
-			FTS_ERROR("apk proc wirte buf zalloc fail");
+			printk("ERR: FocaltechTS: apk proc wirte buf zalloc fail");
 			return -ENOMEM;
 		}
 	} else {
@@ -110,7 +110,7 @@ static ssize_t fts_debug_write(
 	}
 
 	if (copy_from_user(writebuf, buff, buflen)) {
-		FTS_ERROR("[APK]: copy from user error!!");
+		printk("ERR: FocaltechTS: [APK]: copy from user error!!");
 		ret = -EFAULT;
 		goto proc_write_err;
 	}
@@ -137,7 +137,7 @@ static ssize_t fts_debug_write(
 	case PROC_WRITE_REGISTER:
 		ret = fts_write_reg(writebuf[1], writebuf[2]);
 		if (ret < 0) {
-			FTS_ERROR("PROC_WRITE_REGISTER write error");
+			printk("ERR: FocaltechTS: PROC_WRITE_REGISTER write error");
 			goto proc_write_err;
 		}
 		break;
@@ -145,7 +145,7 @@ static ssize_t fts_debug_write(
 	case PROC_READ_DATA:
 		writelen = buflen - 1;
 		if (writelen >= FTX_MAX_COMMMAND_LENGTH) {
-			FTS_ERROR("cmd(PROC_READ_DATA) length(%d) fail", writelen);
+			printk("ERR: FocaltechTS: cmd(PROC_READ_DATA) length(%d) fail", writelen);
 			goto proc_write_err;
 		}
 		memcpy(proc->cmd, writebuf + 1, writelen);
@@ -156,7 +156,7 @@ static ssize_t fts_debug_write(
 		writelen = buflen - 1;
 		ret = fts_write(writebuf + 1, writelen);
 		if (ret < 0) {
-			FTS_ERROR("PROC_WRITE_DATA write error");
+			printk("ERR: FocaltechTS: PROC_WRITE_DATA write error");
 			goto proc_write_err;
 		}
 		break;
@@ -168,7 +168,7 @@ static ssize_t fts_debug_write(
 		snprintf(tmp, PROC_BUF_SIZE, "%s", writebuf + 1);
 		tmp[buflen - 1] = '\0';
 		if (strncmp(tmp, "focal_driver", 12) == 0) {
-			FTS_INFO("APK execute HW Reset");
+			printk("FocaltechTS: APK execute HW Reset");
 			fts_reset_proc(0);
 		}
 		break;
@@ -215,14 +215,14 @@ static ssize_t fts_debug_read(
 	struct ftxxxx_proc *proc = &ts_data->proc;
 
 	if (buflen <= 0) {
-		FTS_ERROR("apk proc read count(%d) fail", buflen);
+		printk("ERR: FocaltechTS: apk proc read count(%d) fail", buflen);
 		return -EINVAL;
 	}
 
 	if (buflen > PROC_BUF_SIZE) {
 		readbuf = (u8 *)kzalloc(buflen * sizeof(u8), GFP_KERNEL);
 		if (NULL == readbuf) {
-			FTS_ERROR("apk proc wirte buf zalloc fail");
+			printk("ERR: FocaltechTS: apk proc wirte buf zalloc fail");
 			return -ENOMEM;
 		}
 	} else {
@@ -238,7 +238,7 @@ static ssize_t fts_debug_read(
 		num_read_chars = 1;
 		ret = fts_read_reg(proc->cmd[0], &readbuf[0]);
 		if (ret < 0) {
-			FTS_ERROR("PROC_READ_REGISTER read error");
+			printk("ERR: FocaltechTS: PROC_READ_REGISTER read error");
 			goto proc_read_err;
 		}
 		break;
@@ -249,7 +249,7 @@ static ssize_t fts_debug_read(
 		num_read_chars = buflen;
 		ret = fts_read(proc->cmd, proc->cmd_len, readbuf, num_read_chars);
 		if (ret < 0) {
-			FTS_ERROR("PROC_READ_DATA read error");
+			printk("ERR: FocaltechTS: PROC_READ_DATA read error");
 			goto proc_read_err;
 		}
 		break;
@@ -268,7 +268,7 @@ static ssize_t fts_debug_read(
 	ret = num_read_chars;
 proc_read_err:
 	if (copy_to_user(buff, readbuf, num_read_chars)) {
-		FTS_ERROR("copy to user error");
+		printk("ERR: FocaltechTS: copy to user error");
 		ret = -EFAULT;
 	}
 
@@ -297,14 +297,14 @@ static int fts_debug_write(
 	struct ftxxxx_proc *proc = &ts_data->proc;
 
 	if (buflen <= 1) {
-		FTS_ERROR("apk proc wirte count(%d) fail", buflen);
+		printk("ERR: FocaltechTS: apk proc wirte count(%d) fail", buflen);
 		return -EINVAL;
 	}
 
 	if (buflen > PROC_BUF_SIZE) {
 		writebuf = (u8 *)kzalloc(buflen * sizeof(u8), GFP_KERNEL);
 		if (NULL == writebuf) {
-			FTS_ERROR("apk proc wirte buf zalloc fail");
+			printk("ERR: FocaltechTS: apk proc wirte buf zalloc fail");
 			return -ENOMEM;
 		}
 	} else {
@@ -312,7 +312,7 @@ static int fts_debug_write(
 	}
 
 	if (copy_from_user(writebuf, buff, buflen)) {
-		FTS_ERROR("[APK]: copy from user error!!");
+		printk("ERR: FocaltechTS: [APK]: copy from user error!!");
 		ret = -EFAULT;
 		goto proc_write_err;
 	}
@@ -339,7 +339,7 @@ static int fts_debug_write(
 	case PROC_WRITE_REGISTER:
 		ret = fts_write_reg(writebuf[1], writebuf[2]);
 		if (ret < 0) {
-			FTS_ERROR("PROC_WRITE_REGISTER write error");
+			printk("ERR: FocaltechTS: PROC_WRITE_REGISTER write error");
 			goto proc_write_err;
 		}
 		break;
@@ -347,7 +347,7 @@ static int fts_debug_write(
 	case PROC_READ_DATA:
 		writelen = buflen - 1;
 		if (writelen >= FTX_MAX_COMMMAND_LENGTH) {
-			FTS_ERROR("cmd(PROC_READ_DATA) length(%d) fail", writelen);
+			printk("ERR: FocaltechTS: cmd(PROC_READ_DATA) length(%d) fail", writelen);
 			goto proc_write_err;
 		}
 		memcpy(proc->cmd, writebuf + 1, writelen);
@@ -358,7 +358,7 @@ static int fts_debug_write(
 		writelen = buflen - 1;
 		ret = fts_write(writebuf + 1, writelen);
 		if (ret < 0) {
-			FTS_ERROR("PROC_WRITE_DATA write error");
+			printk("ERR: FocaltechTS: PROC_WRITE_DATA write error");
 			goto proc_write_err;
 		}
 		break;
@@ -370,7 +370,7 @@ static int fts_debug_write(
 		snprintf(tmp, PROC_BUF_SIZE, "%s", writebuf + 1);
 		tmp[buflen - 1] = '\0';
 		if (strncmp(tmp, "focal_driver", 12) == 0) {
-			FTS_INFO("APK execute HW Reset");
+			printk("FocaltechTS: APK execute HW Reset");
 			fts_reset_proc(0);
 		}
 		break;
@@ -417,14 +417,14 @@ static int fts_debug_read(
 	struct ftxxxx_proc *proc = &ts_data->proc;
 
 	if (buflen <= 0) {
-		FTS_ERROR("apk proc read count(%d) fail", buflen);
+		printk("ERR: FocaltechTS: apk proc read count(%d) fail", buflen);
 		return -EINVAL;
 	}
 
 	if (buflen > PROC_BUF_SIZE) {
 		readbuf = (u8 *)kzalloc(buflen * sizeof(u8), GFP_KERNEL);
 		if (NULL == readbuf) {
-			FTS_ERROR("apk proc wirte buf zalloc fail");
+			printk("ERR: FocaltechTS: apk proc wirte buf zalloc fail");
 			return -ENOMEM;
 		}
 	} else {
@@ -440,7 +440,7 @@ static int fts_debug_read(
 		num_read_chars = 1;
 		ret = fts_read_reg(proc->cmd[0], &readbuf[0]);
 		if (ret < 0) {
-			FTS_ERROR("PROC_READ_REGISTER read error");
+			printk("ERR: FocaltechTS: PROC_READ_REGISTER read error");
 			goto proc_read_err;
 		}
 		break;
@@ -451,7 +451,7 @@ static int fts_debug_read(
 		num_read_chars = buflen;
 		ret = fts_read(proc->cmd, proc->cmd_len, readbuf, num_read_chars);
 		if (ret < 0) {
-			FTS_ERROR("PROC_READ_DATA read error");
+			printk("ERR: FocaltechTS: PROC_READ_DATA read error");
 			goto proc_read_err;
 		}
 		break;
@@ -470,7 +470,7 @@ static int fts_debug_read(
 	ret = num_read_chars;
 proc_read_err:
 	if (copy_to_user(buff, readbuf, num_read_chars)) {
-		FTS_ERROR("copy to user error");
+		printk("ERR: FocaltechTS: copy to user error");
 		ret = -EFAULT;
 	}
 
@@ -556,25 +556,25 @@ int fts_create_proc(struct fts_ts_data *ts_data)
 
 	proc->proc_entry = proc_create(PROC_NAME, 0777, NULL, &fts_proc_fops);
 	if (proc->proc_entry == NULL) {
-		FTS_ERROR("create proc entry fail");
+		printk("ERR: FocaltechTS: create proc entry fail");
 		return -ENOMEM;
 	}
 
 	proc->tp_lockdown_info_proc = proc_create("tp_lockdown_info",
 						0444, NULL, &tp_lockdown_info_fops);
 	if (proc->tp_lockdown_info_proc == NULL) {
-		FTS_ERROR("tp_lockdown_info proc create failed");
+		printk("ERR: FocaltechTS: tp_lockdown_info proc create failed");
 		return -ENOMEM;
 	}
 
 	proc->tp_fw_version_proc = proc_create("tp_fw_version",
 						0444, NULL, &tp_fw_version_fops);
 	if (proc->tp_fw_version_proc == NULL) {
-		FTS_ERROR("tp_fw_version proc create failed");
+		printk("ERR: FocaltechTS: tp_fw_version proc create failed");
 		return -ENOMEM;
 	}
 
-	FTS_INFO("Create proc entry success!");
+	printk("FocaltechTS: Create proc entry success!");
 	return 0;
 }
 
@@ -639,10 +639,10 @@ static ssize_t fts_irq_store(
 
 	mutex_lock(&input_dev->mutex);
 	if (FTS_SYSFS_ECHO_ON(buf)) {
-		FTS_INFO("enable irq");
+		printk("FocaltechTS: enable irq");
 		fts_irq_enable();
 	} else if (FTS_SYSFS_ECHO_OFF(buf)) {
-		FTS_INFO("disable irq");
+		printk("FocaltechTS: disable irq");
 		fts_irq_disable();
 	}
 	mutex_unlock(&input_dev->mutex);
@@ -659,10 +659,10 @@ static ssize_t fts_bootmode_store(
 	FTS_FUNC_ENTER();
 	mutex_lock(&input_dev->mutex);
 	if (FTS_SYSFS_ECHO_ON(buf)) {
-		FTS_INFO("[EX-FUN]set to boot mode");
+		printk("FocaltechTS: [EX-FUN]set to boot mode");
 		fts_data->fw_is_running = false;
 	} else if (FTS_SYSFS_ECHO_OFF(buf)) {
-		FTS_INFO("[EX-FUN]set to fw mode");
+		printk("FocaltechTS: [EX-FUN]set to fw mode");
 		fts_data->fw_is_running = true;
 	}
 	mutex_unlock(&input_dev->mutex);
@@ -857,7 +857,7 @@ static int fts_parse_buf(const char *buf, size_t cmd_len)
 	if (rw_op.len > 0) {
 		tmpbuf = (char *)kzalloc(rw_op.len, GFP_KERNEL);
 		if (!tmpbuf) {
-			FTS_ERROR("allocate memory failed!\n");
+			printk("ERR: FocaltechTS: allocate memory failed!\n");
 			return -ENOMEM;
 		}
 
@@ -902,7 +902,7 @@ static ssize_t fts_tprwreg_store(
 		rw_op.reg = shex_to_int(buf, 2);
 		rw_op.val = shex_to_int(buf + 2, 2);
 	} else if (cmd_length < 5) {
-		FTS_ERROR("Invalid cmd buffer");
+		printk("ERR: FocaltechTS: Invalid cmd buffer");
 		mutex_unlock(&input_dev->mutex);
 		return -EINVAL;
 	} else {
@@ -913,7 +913,7 @@ static ssize_t fts_tprwreg_store(
 	fts_esdcheck_proc_busy(1);
 #endif
 	if (rw_op.len < 0) {
-		FTS_ERROR("cmd buffer error!");
+		printk("ERR: FocaltechTS: cmd buffer error!");
 
 	} else {
 		if (RWREG_OP_READ == rw_op.type) {
@@ -930,9 +930,9 @@ static ssize_t fts_tprwreg_store(
 			}
 
 			if (rw_op.res < 0) {
-				FTS_ERROR("Could not read 0x%02x", rw_op.reg);
+				printk("ERR: FocaltechTS: Could not read 0x%02x", rw_op.reg);
 			} else {
-				FTS_INFO("read 0x%02x, %d bytes successful", rw_op.reg, rw_op.len);
+				printk("FocaltechTS: read 0x%02x, %d bytes successful", rw_op.reg, rw_op.len);
 				rw_op.res = 0;
 			}
 
@@ -946,10 +946,10 @@ static ssize_t fts_tprwreg_store(
 				rw_op.res = fts_write(rw_op.opbuf, rw_op.len);
 			}
 			if (rw_op.res < 0) {
-				FTS_ERROR("Could not write 0x%02x", rw_op.reg);
+				printk("ERR: FocaltechTS: Could not write 0x%02x", rw_op.reg);
 
 			} else {
-				FTS_INFO("Write 0x%02x, %d bytes successful", rw_op.val, rw_op.len);
+				printk("FocaltechTS: Write 0x%02x, %d bytes successful", rw_op.val, rw_op.len);
 				rw_op.res = 0;
 			}
 		}
@@ -978,14 +978,14 @@ static ssize_t fts_fwupgradebin_store(
 	struct input_dev *input_dev = fts_data->input_dev;
 
 	if ((count <= 1) || (count >= FILE_NAME_LENGTH - 32)) {
-		FTS_ERROR("fw bin name's length(%d) fail", (int)count);
+		printk("ERR: FocaltechTS: fw bin name's length(%d) fail", (int)count);
 		return -EINVAL;
 	}
 	memset(fwname, 0, sizeof(fwname));
 	snprintf(fwname, FILE_NAME_LENGTH, "%s", buf);
 	fwname[count - 1] = '\0';
 
-	FTS_INFO("upgrade with bin file through sysfs node");
+	printk("FocaltechTS: upgrade with bin file through sysfs node");
 	mutex_lock(&input_dev->mutex);
 	fts_upgrade_bin(fwname, 0);
 	mutex_unlock(&input_dev->mutex);
@@ -1008,14 +1008,14 @@ static ssize_t fts_fwforceupg_store(
 	struct input_dev *input_dev = fts_data->input_dev;
 
 	if ((count <= 1) || (count >= FILE_NAME_LENGTH - 32)) {
-		FTS_ERROR("fw bin name's length(%d) fail", (int)count);
+		printk("ERR: FocaltechTS: fw bin name's length(%d) fail", (int)count);
 		return -EINVAL;
 	}
 	memset(fwname, 0, sizeof(fwname));
 	snprintf(fwname, FILE_NAME_LENGTH, "%s", buf);
 	fwname[count - 1] = '\0';
 
-	FTS_INFO("force upgrade through sysfs node");
+	printk("FocaltechTS: force upgrade through sysfs node");
 	mutex_lock(&input_dev->mutex);
 	fts_upgrade_bin(fwname, 1);
 	mutex_unlock(&input_dev->mutex);
@@ -1260,11 +1260,11 @@ int fts_create_sysfs(struct fts_ts_data *ts_data)
 
 	ret = sysfs_create_group(&ts_data->dev->kobj, &fts_attribute_group);
 	if (ret) {
-		FTS_ERROR("[EX]: sysfs_create_group() failed!!");
+		printk("ERR: FocaltechTS: [EX]: sysfs_create_group() failed!!");
 		sysfs_remove_group(&ts_data->dev->kobj, &fts_attribute_group);
 		return -ENOMEM;
 	} else {
-		FTS_INFO("[EX]: sysfs_create_group() succeeded!!");
+		printk("FocaltechTS: [EX]: sysfs_create_group() succeeded!!");
 	}
 
 	return ret;
@@ -1306,23 +1306,23 @@ static int fts_ex_mode_switch(enum _ex_mode mode, u8 value)
 	case MODE_GLOVE:
 		ret = fts_write_reg(FTS_REG_GLOVE_MODE_EN, m_val);
 		if (ret < 0) {
-			FTS_ERROR("MODE_GLOVE switch to %d fail", m_val);
+			printk("ERR: FocaltechTS: MODE_GLOVE switch to %d fail", m_val);
 		}
 		break;
 	case MODE_COVER:
 		ret = fts_write_reg(FTS_REG_COVER_MODE_EN, m_val);
 		if (ret < 0) {
-			FTS_ERROR("MODE_COVER switch to %d fail", m_val);
+			printk("ERR: FocaltechTS: MODE_COVER switch to %d fail", m_val);
 		}
 		break;
 	case MODE_CHARGER:
 		ret = fts_write_reg(FTS_REG_CHARGER_MODE_EN, m_val);
 		if (ret < 0) {
-			FTS_ERROR("MODE_CHARGER switch to %d fail", m_val);
+			printk("ERR: FocaltechTS: MODE_CHARGER switch to %d fail", m_val);
 		}
 		break;
 	default:
-		FTS_ERROR("mode(%d) unsupport", mode);
+		printk("ERR: FocaltechTS: mode(%d) unsupport", mode);
 		ret = -EINVAL;
 		break;
 	}
@@ -1524,7 +1524,7 @@ int fts_ex_mode_init(struct fts_ts_data *ts_data)
 
 	ret = sysfs_create_group(&ts_data->dev->kobj, &fts_touch_mode_group);
 	if (ret < 0) {
-		FTS_ERROR("create sysfs(ex_mode) fail");
+		printk("ERR: FocaltechTS: create sysfs(ex_mode) fail");
 		sysfs_remove_group(&ts_data->dev->kobj, &fts_touch_mode_group);
 		return ret;
 	} else {
