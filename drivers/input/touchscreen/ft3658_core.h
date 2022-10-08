@@ -206,6 +206,7 @@ struct fts_ts_data {
 	int key_state;
 	int touch_point;
 	int point_num;
+	int gesture_status;
 	struct regulator *vdd;
 	struct regulator *vcc_i2c;
 	u8 lockdown_info[FTS_LOCKDOWN_INFO_SIZE];

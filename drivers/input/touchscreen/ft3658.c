@@ -1522,7 +1522,7 @@ static void fts_power_supply_work(struct work_struct *work)
 	pm_stay_awake(ts_data->dev);
 	mutex_lock(&ts_data->power_supply_lock);
 	charger_mode = !!power_supply_is_system_supplied();
-	if (charger_mode != ts_data->charger_mode || ts_data->charger_mode < 0) {
+	if (charger_mode != ts_data->charger_mode) {
 		ts_data->charger_mode = charger_mode;
 		FTS_INFO("%s %d\n", __func__, charger_mode);
 		if (charger_mode) {
@@ -2403,9 +2403,9 @@ static int fts_ts_probe(struct spi_device *spi)
 	return 0;
 }
 
-static int fts_ts_remove(struct spi_device *spi)
+static void fts_ts_remove(struct spi_device *spi)
 {
-	return fts_ts_remove_entry(spi_get_drvdata(spi));
+	fts_ts_remove_entry(spi_get_drvdata(spi));
 }
 
 static const struct spi_device_id fts_ts_id[] = {
