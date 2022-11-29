@@ -516,6 +516,44 @@
 	/* Samsung touchscreen @ 48 */
 };
 
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&vreg_l3c_1p2>;
+	status = "okay";
+
+	panel: panel@0 {
+		compatible = "samsung,4k-or-1080p-oled";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 6 GPIO_ACTIVE_LOW>;
+
+		vci-supply = <&vreg_l17a_3p0>;
+		vddio-supply = <&vreg_l14a_1p8>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&disp_reset_n &te_active>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	remote-endpoint = <&panel_in>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss_dsi0_phy {
+	vdda-supply = <&vreg_l18a_0p8>;
+	status = "okay";
+};
+
 &pm8150_gpios {
 	gpio-line-names = "VOL_DOWN_N", /* GPIO_1 */
 			  "",
@@ -806,6 +844,20 @@
 			  "WL_CMD_DATA_CHAIN1",
 			  "WL_BT_COEX_CLK",
 			  "WL_BT_COEX_DATA";
+
+	disp_reset_n: disp-reset-n-state {
+		pins = "gpio6";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	te_active: te-active-state {
+		pins = "gpio8";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-disable;
+	};
 
 	main_cam_pwr_en: main-cam-pwr-en-state {
 		pins = "gpio22";
