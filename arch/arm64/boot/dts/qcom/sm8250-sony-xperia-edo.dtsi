@@ -489,6 +489,10 @@
 	status = "okay";
 };
 
+&gmu {
+	status = "okay";
+};
+
 &gpi_dma0 {
 	status = "okay";
 };
@@ -499,6 +503,14 @@
 
 &gpi_dma2 {
 	status = "okay";
+};
+
+&gpu {
+	status = "okay";
+
+	zap-shader {
+		firmware-name = "qcom/sm8250/Sony/edo/a650_zap.mbn";
+	};
 };
 
 &i2c1 {
