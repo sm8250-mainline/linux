@@ -30,6 +30,7 @@ properties:
               - qcom,sc8280xp-cpu-bwmon
               - qcom,sdm845-cpu-bwmon
               - qcom,sm6350-llcc-bwmon
+              - qcom,sm6375-cpu-bwmon
               - qcom,sm8250-cpu-bwmon
               - qcom,sm8550-cpu-bwmon
           - const: qcom,sdm845-bwmon    # BWMON v4, unified register space
