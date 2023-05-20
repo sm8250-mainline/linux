@@ -209,7 +209,7 @@ static const struct dpu_lm_cfg msm8996_lm[] = {
 		.features = MIXER_MSM8998_MASK,
 		.sblk = &msm8998_lm_sblk,
 		.lm_pair = 0,
-		.pingpong = PINGPONG_MAX,
+		.pingpong = PINGPONG_NONE,
 		.dspp = 0,
 	}, {
 		.name = "lm_4", .id = LM_4,
@@ -217,7 +217,7 @@ static const struct dpu_lm_cfg msm8996_lm[] = {
 		.features = MIXER_MSM8998_MASK,
 		.sblk = &msm8998_lm_sblk,
 		.lm_pair = 0,
-		.pingpong = PINGPONG_MAX,
+		.pingpong = PINGPONG_NONE,
 		.dspp = 0,
 	}, {
 		.name = "lm_5", .id = LM_5,
