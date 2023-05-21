@@ -111,11 +111,6 @@ struct dpu_kms {
 	u32 num_paths;
 };
 
-struct vsync_info {
-	u32 frame_count;
-	u32 line_count;
-};
-
 #define DPU_ENC_WR_PTR_START_TIMEOUT_US 20000
 
 #define DPU_ENC_MAX_POLL_TIMEOUT_US	2000
@@ -141,12 +136,6 @@ struct dpu_global_state
 	*dpu_kms_get_existing_global_state(struct dpu_kms *dpu_kms);
 struct dpu_global_state
 	*__must_check dpu_kms_get_global_state(struct drm_atomic_state *s);
-
-/**
- * Vblank enable/disable functions
- */
-int dpu_enable_vblank(struct msm_kms *kms, struct drm_crtc *crtc);
-void dpu_disable_vblank(struct msm_kms *kms, struct drm_crtc *crtc);
 
 /**
  * dpu_kms_get_clk_rate() - get the clock rate
