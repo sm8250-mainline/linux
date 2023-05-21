@@ -750,6 +750,19 @@ config DRM_PANEL_SONY_AKATSUKI_LGD
 
 	  This panel uses Display Stream Compression 1.1.
 
+config DRM_PANEL_SONY_GRIFFIN_SAMSUNG
+	tristate "Sony Xperia 1 4k OLED panel"
+	depends on GPIOLIB && OF
+	depends on DRM_MIPI_DSI
+	depends on BACKLIGHT_CLASS_DEVICE
+	help
+	  Say Y here if you want to enable support for the Sony Xperia 1 4k
+	  6.5" OLED DSI cmd mode panel produced by Samsung.
+
+	  This panel uses Display Stream Compression 1.1.
+
+	  The panel features a 1644x3840@60 and 1096x2560@60 mode.
+
 config DRM_PANEL_SONY_TD4353_JDI
 	tristate "Sony TD4353 JDI panel"
 	depends on GPIOLIB && OF
