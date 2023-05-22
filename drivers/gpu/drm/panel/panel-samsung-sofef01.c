@@ -316,6 +316,8 @@ static int samsung_sofef01_m_probe(struct mipi_dsi_device *dsi)
 	dsi->format = MIPI_DSI_FMT_RGB888;
 	dsi->mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS;
 
+	ctx->panel.prepare_prev_first = true;
+
 	drm_panel_init(&ctx->panel, dev, &samsung_sofef01_m_panel_funcs,
 		       DRM_MODE_CONNECTOR_DSI);
 
