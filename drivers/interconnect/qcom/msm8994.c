@@ -28,7 +28,7 @@ static const char * const mnoc_intf_clocks[] = {
 
 static const char * const ovirt_clocks[] = {
 	"ocmem",
-}
+};
 
 static const u16 mas_apps_proc_links[] = {
 	MSM8994_BIMC_INT_APPS_SNOC,
