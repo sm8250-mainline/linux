@@ -22,15 +22,18 @@
 #include <drm/display/drm_dsc.h>
 #include <drm/display/drm_dsc_helper.h>
 
+#define WRITE_CONTROL_DISPLAY_BACKLIGHT BIT(5)
+
 struct sony_akatsuki_lgd {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi;
+	struct drm_dsc_config dsc;
 	struct regulator *vddio;
 	struct gpio_desc *reset_gpio;
-	bool prepared;
 };
 
-static inline struct sony_akatsuki_lgd *to_sony_akatsuki_lgd(struct drm_panel *panel)
+static inline struct sony_akatsuki_lgd *
+to_sony_akatsuki_lgd(struct drm_panel *panel)
 {
 	return container_of(panel, struct sony_akatsuki_lgd, panel);
 }
@@ -49,8 +52,8 @@ static int sony_akatsuki_lgd_on(struct sony_akatsuki_lgd *ctx)
 	mipi_dsi_dcs_write_seq(dsi, 0xf2, 0x5a, 0x5a);
 	mipi_dsi_dcs_write_seq(dsi, 0x02, 0x01);
 	mipi_dsi_dcs_write_seq(dsi, 0x59, 0x01);
-	/* Enable backlight control */
-	mipi_dsi_dcs_write_seq(dsi, MIPI_DCS_WRITE_CONTROL_DISPLAY, BIT(5));
+	mipi_dsi_dcs_write_seq(dsi, MIPI_DCS_WRITE_CONTROL_DISPLAY,
+			       WRITE_CONTROL_DISPLAY_BACKLIGHT);
 	mipi_dsi_dcs_write_seq(dsi, 0x57, 0x20, 0x80, 0xde, 0x60, 0x00);
 
 	ret = mipi_dsi_dcs_set_column_address(dsi, 0, 1440 - 1);
@@ -91,6 +94,63 @@ static int sony_akatsuki_lgd_on(struct sony_akatsuki_lgd *ctx)
 
 	mipi_dsi_dcs_write_seq(dsi, 0xe3, 0xac, 0x19, 0x34, 0x14, 0x7d);
 
+	return 0;
+}
+
+static int sony_akatsuki_lgd_prepare(struct drm_panel *panel)
+{
+	struct sony_akatsuki_lgd *ctx = to_sony_akatsuki_lgd(panel);
+	struct drm_dsc_picture_parameter_set pps;
+	struct device *dev = &ctx->dsi->dev;
+	int ret;
+
+	ret = regulator_enable(ctx->vddio);
+	if (ret < 0) {
+		dev_err(dev, "Failed to enable vddio regulator: %d\n", ret);
+		return ret;
+	}
+
+	msleep(100);
+
+	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	usleep_range(5000, 5100);
+
+	ret = sony_akatsuki_lgd_on(ctx);
+	if (ret < 0) {
+		dev_err(dev, "Failed to send on command sequence: %d\n", ret);
+		goto fail;
+	}
+
+	drm_dsc_pps_payload_pack(&pps, &ctx->dsc);
+
+	ret = mipi_dsi_picture_parameter_set(ctx->dsi, &pps);
+	if (ret < 0) {
+		dev_err(panel->dev, "failed to transmit PPS: %d\n", ret);
+		goto fail;
+	}
+	ret = mipi_dsi_compression_mode(ctx->dsi, true);
+	if (ret < 0) {
+		dev_err(dev, "failed to enable compression mode: %d\n", ret);
+		goto fail;
+	}
+
+	msleep(28);
+
+	return 0;
+
+fail:
+	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	regulator_disable(ctx->vddio);
+	return ret;
+}
+
+static int sony_akatsuki_lgd_enable(struct drm_panel *panel)
+{
+	struct sony_akatsuki_lgd *ctx = to_sony_akatsuki_lgd(panel);
+	struct mipi_dsi_device *dsi = ctx->dsi;
+	struct device *dev = &dsi->dev;
+	int ret;
+
 	ret = mipi_dsi_dcs_set_display_on(dsi);
 	if (ret < 0) {
 		dev_err(dev, "Failed to turn display on: %d\n", ret);
@@ -100,8 +160,9 @@ static int sony_akatsuki_lgd_on(struct sony_akatsuki_lgd *ctx)
 	return 0;
 }
 
-static int sony_akatsuki_lgd_off(struct sony_akatsuki_lgd *ctx)
+static int sony_akatsuki_lgd_disable(struct drm_panel *panel)
 {
+	struct sony_akatsuki_lgd *ctx = to_sony_akatsuki_lgd(panel);
 	struct mipi_dsi_device *dsi = ctx->dsi;
 	struct device *dev = &dsi->dev;
 	int ret;
@@ -131,103 +192,49 @@ static int sony_akatsuki_lgd_off(struct sony_akatsuki_lgd *ctx)
 	return 0;
 }
 
-static int sony_akatsuki_lgd_prepare(struct drm_panel *panel)
-{
-	struct sony_akatsuki_lgd *ctx = to_sony_akatsuki_lgd(panel);
-	struct drm_dsc_picture_parameter_set pps;
-	struct device *dev = &ctx->dsi->dev;
-	int ret;
-
-	if (ctx->prepared)
-		return 0;
-
-	ret = regulator_enable(ctx->vddio);
-	if (ret < 0) {
-		dev_err(dev, "Failed to enable vddio regulator: %d\n", ret);
-		return ret;
-	}
-
-	msleep(100);
-
-	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-	usleep_range(5000, 5100);
-
-	ret = sony_akatsuki_lgd_on(ctx);
-	if (ret < 0) {
-		dev_err(dev, "Failed to power on panel: %d\n", ret);
-		goto fail;
-	}
-
-	if (ctx->dsi->dsc) {
-		drm_dsc_pps_payload_pack(&pps, ctx->dsi->dsc);
-
-		ret = mipi_dsi_picture_parameter_set(ctx->dsi, &pps);
-		if (ret < 0) {
-			dev_err(panel->dev, "failed to transmit PPS: %d\n", ret);
-			goto fail;
-		}
-		ret = mipi_dsi_compression_mode(ctx->dsi, true);
-		if (ret < 0) {
-			dev_err(dev, "failed to enable compression mode: %d\n", ret);
-			goto fail;
-		}
-
-		msleep(28);
-	}
-
-	ctx->prepared = true;
-	return 0;
-
-fail:
-	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
-	regulator_disable(ctx->vddio);
-	return ret;
-}
-
 static int sony_akatsuki_lgd_unprepare(struct drm_panel *panel)
 {
 	struct sony_akatsuki_lgd *ctx = to_sony_akatsuki_lgd(panel);
-	struct device *dev = &ctx->dsi->dev;
-	int ret;
 
-	if (!ctx->prepared)
-		return 0;
-
-	ret = sony_akatsuki_lgd_off(ctx);
-	if (ret < 0)
-		dev_err(dev, "Failed to power off panel: %d\n", ret);
-
-	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
 	regulator_disable(ctx->vddio);
 
 	usleep_range(5000, 5100);
 
-	ctx->prepared = false;
 	return 0;
 }
 
+/*
+ * Small fake porch to force the DSI pclk/byteclk
+ * high enough to have a smooth panel at 60Hz.
+*/
+static const int fake_porch = 60;
+
 static const struct drm_display_mode sony_akatsuki_lgd_mode = {
-	.clock = (1440 + 312 + 8 + 8) * (2880 + 48 + 8 + 8) * 60 / 1000,
+	.clock = (1440 + fake_porch) * 2880 * 60 / 1000,
 	.hdisplay = 1440,
-	.hsync_start = 1440 + 312,
-	.hsync_end = 1440 + 312 + 8,
-	.htotal = 1440 + 312 + 8 + 8,
+	.hsync_start = 1440 + fake_porch,
+	.hsync_end = 1440 + fake_porch,
+	.htotal = 1440 + fake_porch,
 	.vdisplay = 2880,
-	.vsync_start = 2880 + 48,
-	.vsync_end = 2880 + 48 + 8,
-	.vtotal = 2880 + 48 + 8 + 8,
+	.vsync_start = 2880,
+	.vsync_end = 2880,
+	.vtotal = 2880,
 	.width_mm = 68,
 	.height_mm = 136,
 };
 
 static int sony_akatsuki_lgd_get_modes(struct drm_panel *panel,
-				   struct drm_connector *connector)
+				       struct drm_connector *connector)
 {
-	return drm_connector_helper_get_modes_fixed(connector, &sony_akatsuki_lgd_mode);
+	return drm_connector_helper_get_modes_fixed(connector,
+						    &sony_akatsuki_lgd_mode);
 }
 
 static const struct drm_panel_funcs sony_akatsuki_lgd_panel_funcs = {
 	.prepare = sony_akatsuki_lgd_prepare,
+	.enable = sony_akatsuki_lgd_enable,
+	.disable = sony_akatsuki_lgd_disable,
 	.unprepare = sony_akatsuki_lgd_unprepare,
 	.get_modes = sony_akatsuki_lgd_get_modes,
 };
@@ -267,7 +274,6 @@ static int sony_akatsuki_lgd_probe(struct mipi_dsi_device *dsi)
 	};
 	struct device *dev = &dsi->dev;
 	struct sony_akatsuki_lgd *ctx;
-	struct drm_dsc_config *dsc;
 	int ret;
 
 	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
@@ -279,7 +285,7 @@ static int sony_akatsuki_lgd_probe(struct mipi_dsi_device *dsi)
 		return dev_err_probe(dev, PTR_ERR(ctx->vddio),
 				     "Failed to get vddio\n");
 
-	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_ASIS);
+	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
 				     "Failed to get reset-gpios\n");
@@ -306,21 +312,22 @@ static int sony_akatsuki_lgd_probe(struct mipi_dsi_device *dsi)
 	drm_panel_add(&ctx->panel);
 
 	/* This panel only supports DSC; unconditionally enable it */
-	dsi->dsc = dsc = devm_kzalloc(&dsi->dev, sizeof(*dsc), GFP_KERNEL);
-	if (!dsc)
-		return -ENOMEM;
+	dsi->dsc = &ctx->dsc;
 
-	dsc->dsc_version_major = 1;
-	dsc->dsc_version_minor = 1;
+	ctx->dsc.dsc_version_major = 1;
+	ctx->dsc.dsc_version_minor = 1;
 
-	dsc->slice_height = 32;
-	dsc->slice_count = 2;
-	// TODO: Get hdisplay from the mode
-	WARN_ON(1440 % dsc->slice_count);
-	dsc->slice_width = 1440 / dsc->slice_count;
-	dsc->bits_per_component = 8;
-	dsc->bits_per_pixel = 8 << 4; /* 4 fractional bits */
-	dsc->block_pred_enable = true;
+	ctx->dsc.slice_height = 32;
+	ctx->dsc.slice_count = 2;
+	/*
+	 * hdisplay should be read from the selected mode once
+	 * it is passed back to drm_panel (in prepare?)
+	 */
+	WARN_ON(1440 % ctx->dsc.slice_count);
+	ctx->dsc.slice_width = 1440 / ctx->dsc.slice_count;
+	ctx->dsc.bits_per_component = 8;
+	ctx->dsc.bits_per_pixel = 8 << 4; /* 4 fractional bits */
+	ctx->dsc.block_pred_enable = true;
 
 	ret = mipi_dsi_attach(dsi);
 	if (ret < 0) {
@@ -361,5 +368,6 @@ static struct mipi_dsi_driver sony_akatsuki_lgd_driver = {
 module_mipi_dsi_driver(sony_akatsuki_lgd_driver);
 
 MODULE_AUTHOR("Marijn Suijten <marijn.suijten@somainline.org>");
-MODULE_DESCRIPTION("DRM panel driver for an unnamed LGD OLED panel found in the Sony Xperia XZ3");
+MODULE_DESCRIPTION(
+	"DRM panel driver for an unnamed LGD OLED panel found in the Sony Xperia XZ3");
 MODULE_LICENSE("GPL");
