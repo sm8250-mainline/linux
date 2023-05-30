@@ -28,22 +28,22 @@
 		#size-cells = <2>;
 		ranges;
 
-		framebuffer: framebuffer@e1000000 {
-			compatible = "simple-framebuffer";
-			reg = <0 0xe1000000 0 0x2300000>;
+		// framebuffer: framebuffer@e1000000 {
+		// 	compatible = "simple-framebuffer";
+		// 	reg = <0 0xe1000000 0 0x2300000>;
 
-			/* The display, even though it's 4K, initializes at 1080-ish p */
-			width = <1096>;
-			height = <2560>;
-			stride = <(1096 * 4)>;
-			format = "a8r8g8b8";
-			/*
-			 * That's (going to be) a lot of clocks, but it's necessary due
-			 * to unused clk cleanup & no panel driver yet
-			 */
-			clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
-				 <&gcc GCC_DISP_SF_AXI_CLK>;
-		};
+		// 	/* The display, even though it's 4K, initializes at 1080-ish p */
+		// 	width = <1096>;
+		// 	height = <2560>;
+		// 	stride = <(1096 * 4)>;
+		// 	format = "a8r8g8b8";
+		// 	/*
+		// 	 * That's (going to be) a lot of clocks, but it's necessary due
+		// 	 * to unused clk cleanup & no panel driver yet
+		// 	 */
+		// 	clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
+		// 		 <&gcc GCC_DISP_SF_AXI_CLK>;
+		// };
 	};
 
 	gpio-keys {
@@ -661,7 +661,6 @@
 	panel: panel@0 {
 		reg = <0>;
 
-		disp-te-gpios = <&tlmm 82 GPIO_ACTIVE_HIGH>;
 		reset-gpios = <&tlmm 24 GPIO_ACTIVE_LOW>;
 
 		vci-supply = <&pm8350c_l13>;

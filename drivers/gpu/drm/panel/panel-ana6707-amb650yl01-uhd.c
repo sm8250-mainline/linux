@@ -17,14 +17,17 @@
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_modes.h>
 #include <drm/drm_panel.h>
+#include <drm/display/drm_dsc.h>
+#include <drm/display/drm_dsc_helper.h>
 
 #define HAS_DUAL_DSI BIT(0)
 
 struct ana6707_amb650yl01 {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi[2];
+	struct drm_dsc_config dsc;
 	struct regulator_bulk_data supplies[7];
-	const struct mipi_dsi_device_info dsi_info;
+	// const struct mipi_dsi_device_info dsi_info;
 	struct gpio_desc *reset_gpio;
 	bool prepared;
 };
@@ -60,7 +63,7 @@ static int ana6707_amb650yl01_timing_switch(struct ana6707_amb650yl01 *ctx)
 	}
 
 	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
 	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x5a, 0x5a);
 	if (is_4k)
@@ -130,7 +133,7 @@ static int ana6707_amb650yl01_timing_switch(struct ana6707_amb650yl01 *ctx)
 	usleep_range(10000, 11000);
 
 	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	return 0;
 }
@@ -154,7 +157,7 @@ static int ana6707_amb650yl01_on(struct ana6707_amb650yl01 *ctx)
 	}
 
 	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
 	if (ret < 0) {
@@ -232,7 +235,7 @@ static int ana6707_amb650yl01_off(struct ana6707_amb650yl01 *ctx)
 	int ret;
 
 	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
 	ret = mipi_dsi_dcs_set_display_off(dsi);
 	if (ret < 0) {
@@ -309,10 +312,10 @@ static int ana6707_amb650yl01_unprepare(struct drm_panel *panel)
 }
 
 /*
- * All of the values here are x2 of what's specified in the downstream device-tree,
+ * All of the horizontal values here are x2 of what's specified in the downstream device-tree,
  * as the information there is essentially divided by the number of DSI hosts
  */
-/* HACK! the framerate is cut to accomodate for non-DSC bw limits */
+/* HACK! the framerate is cut to accommodate for non-DSC bw limits */
 static const struct drm_display_mode ana6707_amb650yl01_mode_4k = {
 	.clock = (1644 + 72 + 16 + 16) * (3840 + 360 + 16 + 16) * 30 / 1000,
 	.hdisplay = 1644,
@@ -329,10 +332,10 @@ static const struct drm_display_mode ana6707_amb650yl01_mode_4k = {
 
 static const struct drm_display_mode ana6707_amb650yl01_mode = {
 	.clock = (1096 + 224 + 16 + 16) * (2560 + 180 + 8 + 8) * 60 / 1000,
-	.hdisplay = 1096,
-	.hsync_start = 1096 + 224,
-	.hsync_end = 1096 + 224 + 16,
-	.htotal = 1096 + 224 + 16 + 16,
+	.hdisplay = (1096),
+	.hsync_start = (1096 + 224),
+	.hsync_end = (1096 + 224 + 16),
+	.htotal = (1096 + 224 + 16 + 16),
 	.vdisplay = 2560,
 	.vsync_start = 2560 + 180,
 	.vsync_end = 2560 + 180 + 8,
@@ -374,16 +377,15 @@ static int ana6707_amb650yl01_bl_update_status(struct backlight_device *bl)
 	int ret;
 
 	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
-	brightness = cpu_to_be16(brightness);
-
-	ret = mipi_dsi_dcs_set_display_brightness(dsi, brightness);
-	if (ret < 0)
-		return ret;
+	ret = mipi_dsi_dcs_set_display_brightness_large(dsi, brightness);
 
 	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+
+	if (ret < 0)
+		return ret;
 
 	return 0;
 }
@@ -396,16 +398,17 @@ static int ana6707_amb650yl01_bl_get_brightness(struct backlight_device *bl)
 	int ret;
 
 	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
-	ret = mipi_dsi_dcs_get_display_brightness(dsi, &brightness);
+	ret = mipi_dsi_dcs_get_display_brightness_large(dsi, &brightness);
+
+	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
+	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+
 	if (ret < 0)
 		return ret;
 
-	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
-
-	return be16_to_cpu(brightness);
+	return brightness;
 }
 
 static const struct backlight_ops ana6707_amb650yl01_bl_ops = {
@@ -465,16 +468,22 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio), "Failed to get reset-gpios\n");
 
-	dual_dsi = (u64)of_device_get_match_data(dev) & HAS_DUAL_DSI;
+	// TODO: Let's not hardcode the nodes and count the number of ports instead?
+	dual_dsi = true;
+	// (u64)of_device_get_match_data(dev) & HAS_DUAL_DSI;
 
 	if (dual_dsi) {
+		dev_notice(dev, "Starting search for dsi1\n");
+
 		dsi_sec = of_graph_get_remote_node(dsi->dev.of_node, 1, -1);
 		if (!dsi_sec) {
 			dev_err(dev, "Cannot get secondary DSI node.\n");
 			return -ENODEV;
 		}
 
-		const struct mipi_dsi_device_info info = { "AMB650YL01", 0, dsi_sec };
+		const struct mipi_dsi_device_info info = { "AMB650YL01", 0, NULL/* dsi_sec */ };
+
+		dev_notice(dev, "Found second DSI `%s`\n", dsi_sec->name);
 
 		dsi_sec_host = of_find_mipi_dsi_host_by_node(dsi_sec);
 		of_node_put(dsi_sec);
@@ -488,6 +497,8 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 			dev_err(dev, "Cannot get secondary DSI node\n");
 			return -ENODEV;
 		}
+
+		dev_notice(dev, "Second DSI name `%s`\n", ctx->dsi[1]->name);
 	}
 
 	ctx->dsi[0] = dsi;
@@ -495,6 +506,7 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 
 	drm_panel_init(&ctx->panel, dev, &ana6707_amb650yl01_panel_funcs,
 		       DRM_MODE_CONNECTOR_DSI);
+	ctx->panel.prepare_prev_first = true;
 
 	ctx->panel.backlight = ana6707_amb650yl01_create_backlight(dsi);
 	if (IS_ERR(ctx->panel.backlight))
@@ -503,7 +515,28 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 
 	drm_panel_add(&ctx->panel);
 
-	for (i = 0; i <= dual_dsi; i++) {
+	ctx->dsc.dsc_version_major = 1;
+	ctx->dsc.dsc_version_minor = 1;
+
+	ctx->dsc.slice_height = 32;
+	ctx->dsc.slice_count = 2;
+	/*
+	 * hdisplay should be read from the selected mode once
+	 * it is passed back to drm_panel (in prepare?)
+	 */
+	WARN_ON(1096 % ctx->dsc.slice_count);
+	ctx->dsc.slice_width = 1096 / ctx->dsc.slice_count;
+	ctx->dsc.bits_per_component = 8;
+	ctx->dsc.bits_per_pixel = 8 << 4; /* 4 fractional bits */
+	ctx->dsc.block_pred_enable = true;
+
+	for (i = 0; i <= 0; i++) {
+		if (!ctx->dsi[i])
+			continue;
+
+		/* This panel only supports DSC; unconditionally enable it */
+		ctx->dsi[i]->dsc = &ctx->dsc;
+
 		ctx->dsi[i]->lanes = 4;
 		ctx->dsi[i]->format = MIPI_DSI_FMT_RGB888;
 		ctx->dsi[i]->mode_flags = MIPI_DSI_CLOCK_NON_CONTINUOUS;
@@ -515,6 +548,8 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 			return ret;
 		}
 	}
+
+	dev_notice(dev, "FINALLY PROBED SUCCESSFULLY!\n");
 
 	return 0;
 }
