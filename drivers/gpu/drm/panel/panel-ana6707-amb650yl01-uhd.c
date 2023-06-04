@@ -499,6 +499,7 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 		}
 
 		dev_notice(dev, "Second DSI name `%s`\n", ctx->dsi[1]->name);
+		mipi_dsi_set_drvdata(ctx->dsi[1], ctx);
 	}
 
 	ctx->dsi[0] = dsi;
@@ -530,12 +531,18 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 	ctx->dsc.bits_per_pixel = 8 << 4; /* 4 fractional bits */
 	ctx->dsc.block_pred_enable = true;
 
-	for (i = 0; i <= 0; i++) {
+	/* This panel only supports DSC; unconditionally enable it */
+	ctx->dsi[0]->dsc = &ctx->dsc;
+
+	for (i = 0; i <= dual_dsi; i++) {
 		if (!ctx->dsi[i])
 			continue;
 
-		/* This panel only supports DSC; unconditionally enable it */
-		ctx->dsi[i]->dsc = &ctx->dsc;
+		dev_notice(&ctx->dsi[i]->dev, "Binding DSI %d\n", i);
+
+		// TODO: KP when calling mipi_dsi_attach below?
+		if (i > 0)
+			continue;
 
 		ctx->dsi[i]->lanes = 4;
 		ctx->dsi[i]->format = MIPI_DSI_FMT_RGB888;
