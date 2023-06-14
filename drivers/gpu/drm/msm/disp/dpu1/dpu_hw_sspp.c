@@ -617,7 +617,6 @@ int _dpu_hw_sspp_init_debugfs(struct dpu_hw_sspp *hw_pipe, struct dpu_kms *kms,
 			      struct dentry *entry)
 {
 	const struct dpu_sspp_cfg *cfg = hw_pipe->cap;
-	const struct dpu_sspp_sub_blks *sblk = cfg->sblk;
 	struct dentry *debugfs_root;
 	char sspp_name[32];
 
