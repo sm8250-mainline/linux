@@ -316,7 +316,7 @@ static const struct dpu_intf_cfg sm8150_intf[] = {
 	}, {
 		.name = "intf_1", .id = INTF_1,
 		.base = 0x6a800, .len = 0x2bc,
-		.features = INTF_SC7180_MASK,
+		.features = INTF_SC7180_MASK | BIT(DPU_INTF_TE),
 		.type = INTF_DSI,
 		.controller_id = MSM_DSI_CONTROLLER_0,
 		.prog_fetch_lines_worst_case = 24,
@@ -326,7 +326,7 @@ static const struct dpu_intf_cfg sm8150_intf[] = {
 	}, {
 		.name = "intf_2", .id = INTF_2,
 		.base = 0x6b000, .len = 0x2bc,
-		.features = INTF_SC7180_MASK,
+		.features = INTF_SC7180_MASK | BIT(DPU_INTF_TE),
 		.type = INTF_DSI,
 		.controller_id = MSM_DSI_CONTROLLER_1,
 		.prog_fetch_lines_worst_case = 24,

@@ -161,7 +161,7 @@ static const struct dpu_intf_cfg sm6125_intf[] = {
 	}, {
 		.name = "intf_1", .id = INTF_1,
 		.base = 0x6a800, .len = 0x2c0,
-		.features = INTF_SC7180_MASK,
+		.features = INTF_SC7180_MASK | BIT(DPU_INTF_TE),
 		.type = INTF_DSI,
 		.controller_id = 0,
 		.prog_fetch_lines_worst_case = 24,
