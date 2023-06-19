@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2023 FIXME
-// Generated with linux-mdss-dsi-panel-driver-generator from vendor device tree:
-//   Copyright (c) 2013, The Linux Foundation. All rights reserved. (FIXME)
+// Copyright (c) 2023 Marijn Suijten <marijn.suijten@somainline.org>
 
 #include <linux/backlight.h>
 #include <linux/delay.h>
@@ -17,10 +15,11 @@
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_modes.h>
 #include <drm/drm_panel.h>
+#include <drm/drm_probe_helper.h>
 #include <drm/display/drm_dsc.h>
 #include <drm/display/drm_dsc_helper.h>
 
-#define HAS_DUAL_DSI BIT(0)
+static const bool enable_4k = false, is_120fps = false;
 
 struct ana6707_amb650yl01 {
 	struct drm_panel panel;
@@ -32,8 +31,8 @@ struct ana6707_amb650yl01 {
 	bool prepared;
 };
 
-static inline
-struct ana6707_amb650yl01 *to_ana6707_amb650yl01(struct drm_panel *panel)
+static inline struct ana6707_amb650yl01 *
+to_ana6707_amb650yl01(struct drm_panel *panel)
 {
 	return container_of(panel, struct ana6707_amb650yl01, panel);
 }
@@ -42,111 +41,22 @@ static void ana6707_amb650yl01_reset(struct ana6707_amb650yl01 *ctx)
 {
 	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
 	usleep_range(10000, 11000);
-}
-
-static int ana6707_amb650yl01_timing_switch(struct ana6707_amb650yl01 *ctx)
-{
-	struct mipi_dsi_device *dsi = ctx->dsi[0];
-	struct device *dev = &ctx->dsi[0]->dev;
-	bool is_4k = false, is_120fps = false;
-	u16 resX, resY, scanline;
-	int ret;
-
-	if (is_4k) {
-		scanline = 0;
-		resX = 1644 - 1;
-		resY = 3840 - 1;
-	} else {
-		scanline = 0xf00;
-		resX = 1080 - 1;
-		resY = 2560 - 1;
-	}
-
-	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x5a, 0x5a);
-	if (is_4k)
-		mipi_dsi_dcs_write_seq(dsi, 0x60, 0x00, 0xc0);
-	else
-		mipi_dsi_dcs_write_seq(dsi, 0x60, 0x04, 0xc0);
-
-	mipi_dsi_dcs_write_seq(dsi, 0xbd, 0x03, 0x03, 0x03);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x3a);
-	mipi_dsi_dcs_write_seq(dsi, 0xbd, 0x00, 0x04);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x1a);
-	mipi_dsi_dcs_write_seq(dsi, 0xbd, 0x00, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0xc9, 0x02, 0x22);
-	mipi_dsi_dcs_write_seq(dsi, 0xf7, 0x07);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0xa5, 0xa5);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x5a, 0x5a);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x1f);
-	mipi_dsi_dcs_write_seq(dsi, 0xcb, 0xa7);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x3b);
-	mipi_dsi_dcs_write_seq(dsi, 0xcb, 0x25, 0xa5);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x47);
-	mipi_dsi_dcs_write_seq(dsi, 0xcb, 0xa7);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x57);
-	mipi_dsi_dcs_write_seq(dsi, 0xcb, 0x12);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x59);
-	mipi_dsi_dcs_write_seq(dsi, 0xcb, 0x0c);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x44);
-	mipi_dsi_dcs_write_seq(dsi, 0xb7, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0xf7, 0x07);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0xa5, 0xa5);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x5a, 0x5a);
-	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x9f);
-	mipi_dsi_dcs_write_seq(dsi, 0xc8,
-			       0x00, 0x90, 0x00, 0x90, 0x00, 0x90, 0x00, 0x90, 0x00,
-			       0x90);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0xa5, 0xa5);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x5a, 0x5a);
-	if (is_4k)
-		mipi_dsi_dcs_write_seq(dsi, 0x60, 0x00, 0xc0);
-	else
-		mipi_dsi_dcs_write_seq(dsi, 0x60, 0x04, 0xc0);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0xa5, 0xa5);
-
-	ret = mipi_dsi_dcs_set_column_address(dsi, 0, resX);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set column address: %d\n", ret);
-		return ret;
-	}
-
-	ret = mipi_dsi_dcs_set_page_address(dsi, 0, resY);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set page address: %d\n", ret);
-		return ret;
-	}
-
-	ret = mipi_dsi_dcs_set_tear_scanline(dsi, scanline);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set tear scanline: %d\n", ret);
-		return ret;
-	}
-
-	ret = mipi_dsi_dcs_set_display_on(dsi);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set display on: %d\n", ret);
-		return ret;
-	}
-	usleep_range(10000, 11000);
-
-	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
-
-	return 0;
+	// gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	// usleep_range(5000, 6000);
+	// gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	// usleep_range(1000, 2000);
+	// gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	// usleep_range(10000, 11000);
 }
 
 static int ana6707_amb650yl01_on(struct ana6707_amb650yl01 *ctx)
 {
 	struct mipi_dsi_device *dsi = ctx->dsi[0];
-	struct device *dev = &ctx->dsi[0]->dev;
-	bool is_4k = false, is_120fps = false;
+	struct device *dev = &dsi->dev;
 	u16 resX, resY, scanline;
 	int ret;
 
-	if (is_4k) {
+	if (enable_4k) {
 		scanline = 0;
 		resX = 1644 - 1;
 		resY = 3840 - 1;
@@ -157,20 +67,34 @@ static int ana6707_amb650yl01_on(struct ana6707_amb650yl01 *ctx)
 	}
 
 	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+	if (ctx->dsi[1])
+		ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
 	if (ret < 0) {
 		dev_err(dev, "Failed to exit sleep mode: %d\n", ret);
 		return ret;
 	}
+	// ret = mipi_dsi_dcs_exit_sleep_mode(ctx->dsi[1]);
+	// if (ret < 0) {
+	// 	dev_err(dev, "Failed to exit sleep mode: %d\n", ret);
+	// 	return ret;
+	// }
 	usleep_range(15000, 16000);
 
-	ret = mipi_dsi_compression_mode(dsi, false);
+	ret = mipi_dsi_compression_mode(dsi, true);
 	if (ret < 0) {
 		dev_err(dev, "Failed to set compression mode: %d\n", ret);
 		return ret;
 	}
+	// if (ctx->dsi[1]) {
+	// 	ret = mipi_dsi_compression_mode(ctx->dsi[1], true);
+	// 	if (ret < 0) {
+	// 		dev_err(dev, "failed to enable compression mode: %d\n",
+	// 			ret);
+	// 		return ret;
+	// 	}
+	// }
 
 	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x5a, 0x5a);
 	mipi_dsi_dcs_write_seq(dsi, 0xb0, 0x16);
@@ -231,11 +155,8 @@ static int ana6707_amb650yl01_on(struct ana6707_amb650yl01 *ctx)
 static int ana6707_amb650yl01_off(struct ana6707_amb650yl01 *ctx)
 {
 	struct mipi_dsi_device *dsi = ctx->dsi[0];
-	struct device *dev = &ctx->dsi[0]->dev;
+	struct device *dev = &dsi->dev;
 	int ret;
-
-	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
 	ret = mipi_dsi_dcs_set_display_off(dsi);
 	if (ret < 0) {
@@ -257,7 +178,9 @@ static int ana6707_amb650yl01_off(struct ana6707_amb650yl01 *ctx)
 static int ana6707_amb650yl01_prepare(struct drm_panel *panel)
 {
 	struct ana6707_amb650yl01 *ctx = to_ana6707_amb650yl01(panel);
-	struct device *dev = &ctx->dsi[0]->dev;
+	struct drm_dsc_picture_parameter_set pps;
+	struct mipi_dsi_device *dsi = ctx->dsi[0];
+	struct device *dev = &dsi->dev;
 	int ret;
 
 	if (ctx->prepared)
@@ -271,24 +194,83 @@ static int ana6707_amb650yl01_prepare(struct drm_panel *panel)
 
 	ana6707_amb650yl01_reset(ctx);
 
+	msleep(120);
+
 	ret = ana6707_amb650yl01_on(ctx);
 	if (ret < 0) {
 		dev_err(dev, "Failed to initialize panel: %d\n", ret);
-		gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-		regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
-		return ret;
+		goto fail;
 	}
 
-	ret = ana6707_amb650yl01_timing_switch(ctx);
+	msleep(120);
+
+	drm_dsc_pps_payload_pack(&pps, &ctx->dsc);
+
+	ret = mipi_dsi_picture_parameter_set(dsi, &pps);
 	if (ret < 0) {
-		dev_err(dev, "Failed to execute switch timing cmd: %d\n", ret);
-		gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-		regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
+		dev_err(panel->dev, "failed to transmit PPS: %d\n", ret);
+		goto fail;
+	}
+	// if (ctx->dsi[1]) {
+	// 	ret = mipi_dsi_picture_parameter_set(ctx->dsi[1], &pps);
+	// 	if (ret < 0) {
+	// 		dev_err(panel->dev, "failed to transmit PPS: %d\n",
+	// 			ret);
+	// 		goto fail;
+	// 	}
+	// }
+
+	msleep(28);
+
+	// ret = ana6707_amb650yl01_timing_switch(ctx);
+	// if (ret < 0) {
+	// 	dev_err(dev, "Failed to execute switch timing cmd: %d\n", ret);
+	// 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	// 	regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
+	// 	return ret;
+	// }
+
+	return 0;
+
+fail:
+	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
+	return ret;
+}
+
+static int ana6707_amb650yl01_enable(struct drm_panel *panel)
+{
+	struct ana6707_amb650yl01 *ctx = to_ana6707_amb650yl01(panel);
+	struct mipi_dsi_device *dsi = ctx->dsi[0];
+	struct device *dev = &dsi->dev;
+	int ret;
+
+	ret = mipi_dsi_dcs_set_display_on(dsi);
+	if (ret < 0) {
+		dev_err(dev, "Failed to set display on: %d\n", ret);
 		return ret;
 	}
+	// ret = mipi_dsi_dcs_set_display_on(ctx->dsi[1]);
+	// if (ret < 0) {
+	// 	dev_err(dev, "Failed to set display on: %d\n", ret);
+	// 	return ret;
+	// }
+	usleep_range(10000, 11000);
 
-	ctx->prepared = true;
-	return 0;
+	return ret;
+}
+
+static int ana6707_amb650yl01_disable(struct drm_panel *panel)
+{
+	struct ana6707_amb650yl01 *ctx = to_ana6707_amb650yl01(panel);
+	struct device *dev = &ctx->dsi[0]->dev;
+	int ret;
+
+	ret = ana6707_amb650yl01_off(ctx);
+	if (ret < 0)
+		dev_err(dev, "Failed to un-initialize panel: %d\n", ret);
+
+	return ret;
 }
 
 static int ana6707_amb650yl01_unprepare(struct drm_panel *panel)
@@ -297,12 +279,12 @@ static int ana6707_amb650yl01_unprepare(struct drm_panel *panel)
 	struct device *dev = &ctx->dsi[0]->dev;
 	int ret;
 
+	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	if (ctx->dsi[1])
+		ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+
 	if (!ctx->prepared)
 		return 0;
-
-	ret = ana6707_amb650yl01_off(ctx);
-	if (ret < 0)
-		dev_err(dev, "Failed to un-initialize panel: %d\n", ret);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
 	regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
@@ -317,54 +299,49 @@ static int ana6707_amb650yl01_unprepare(struct drm_panel *panel)
  */
 /* HACK! the framerate is cut to accommodate for non-DSC bw limits */
 static const struct drm_display_mode ana6707_amb650yl01_mode_4k = {
-	.clock = (1644 + 72 + 16 + 16) * (3840 + 360 + 16 + 16) * 30 / 1000,
+	.clock = (1644 + 16) * (3840 + 16) * 60 / 1000,
 	.hdisplay = 1644,
-	.hsync_start = 1644 + 72,
-	.hsync_end = 1644 + 72 + 16,
-	.htotal = 1644 + 72 + 16 + 16,
+	.hsync_start = 1644,
+	.hsync_end = 1644,
+	.htotal = 1644 + 16,
 	.vdisplay = 3840,
-	.vsync_start = 3840 + 360,
-	.vsync_end = 3840 + 360 + 16,
-	.vtotal = 3840 + 360 + 16 + 16,
+	.vsync_start = 3840,
+	.vsync_end = 3840,
+	.vtotal = 3840 + 16,
 	.width_mm = 65,
 	.height_mm = 152,
 };
 
 static const struct drm_display_mode ana6707_amb650yl01_mode = {
-	.clock = (1096 + 224 + 16 + 16) * (2560 + 180 + 8 + 8) * 60 / 1000,
+	.clock = (1096 + 16 + 16) * (2560 + 8 + 8) * 60 / 1000,
 	.hdisplay = (1096),
-	.hsync_start = (1096 + 224),
-	.hsync_end = (1096 + 224 + 16),
-	.htotal = (1096 + 224 + 16 + 16),
+	.hsync_start = (1096),
+	.hsync_end = (1096 + 16),
+	.htotal = (1096 + 16 + 16),
 	.vdisplay = 2560,
-	.vsync_start = 2560 + 180,
-	.vsync_end = 2560 + 180 + 8,
-	.vtotal = 2560 + 180 + 8 + 8,
+	.vsync_start = 2560,
+	.vsync_end = 2560 + 8,
+	.vtotal = 2560 + 8 + 8,
 	.width_mm = 65,
 	.height_mm = 152,
 };
 
 static int ana6707_amb650yl01_get_modes(struct drm_panel *panel,
-					    struct drm_connector *connector)
+					struct drm_connector *connector)
 {
 	struct drm_display_mode *mode;
-
-	mode = drm_mode_duplicate(connector->dev, &ana6707_amb650yl01_mode);
-	if (!mode)
-		return -ENOMEM;
-
-	drm_mode_set_name(mode);
-
-	mode->type = DRM_MODE_TYPE_DRIVER | DRM_MODE_TYPE_PREFERRED;
-	connector->display_info.width_mm = mode->width_mm;
-	connector->display_info.height_mm = mode->height_mm;
-	drm_mode_probed_add(connector, mode);
-
-	return 1;
+	if (enable_4k)
+		return drm_connector_helper_get_modes_fixed(
+			connector, &ana6707_amb650yl01_mode_4k);
+	else
+		return drm_connector_helper_get_modes_fixed(
+			connector, &ana6707_amb650yl01_mode);
 }
 
 static const struct drm_panel_funcs ana6707_amb650yl01_panel_funcs = {
 	.prepare = ana6707_amb650yl01_prepare,
+	.enable = ana6707_amb650yl01_enable,
+	.disable = ana6707_amb650yl01_disable,
 	.unprepare = ana6707_amb650yl01_unprepare,
 	.get_modes = ana6707_amb650yl01_get_modes,
 };
@@ -377,12 +354,14 @@ static int ana6707_amb650yl01_bl_update_status(struct backlight_device *bl)
 	int ret;
 
 	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	if (ctx->dsi[1])
+		ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
 	ret = mipi_dsi_dcs_set_display_brightness_large(dsi, brightness);
 
 	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+	if (ctx->dsi[1])
+		ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	if (ret < 0)
 		return ret;
@@ -398,12 +377,14 @@ static int ana6707_amb650yl01_bl_get_brightness(struct backlight_device *bl)
 	int ret;
 
 	ctx->dsi[0]->mode_flags &= ~MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
+	if (ctx->dsi[1])
+		ctx->dsi[1]->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
 	ret = mipi_dsi_dcs_get_display_brightness_large(dsi, &brightness);
 
 	ctx->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
-	// ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+	if (ctx->dsi[1])
+		ctx->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	if (ret < 0)
 		return ret;
@@ -422,21 +403,22 @@ ana6707_amb650yl01_create_backlight(struct mipi_dsi_device *dsi)
 	struct device *dev = &dsi->dev;
 	const struct backlight_properties props = {
 		.type = BACKLIGHT_RAW,
-		.brightness = 4095,
+		.brightness = 100,
 		.max_brightness = 4095,
 	};
 
 	return devm_backlight_device_register(dev, dev_name(dev), dev, dsi,
-					      &ana6707_amb650yl01_bl_ops, &props);
+					      &ana6707_amb650yl01_bl_ops,
+					      &props);
 }
 
 static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 {
+	const u16 hdisplay = enable_4k ? 1644 : 1096;
 	struct mipi_dsi_host *dsi_sec_host;
 	struct ana6707_amb650yl01 *ctx;
 	struct device *dev = &dsi->dev;
 	struct device_node *dsi_sec;
-	bool dual_dsi;
 	int ret, i;
 
 	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
@@ -464,42 +446,39 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 	if (ret < 0)
 		return dev_err_probe(dev, ret, "Failed to get regulators\n");
 
-	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_ASIS);
+	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
-		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio), "Failed to get reset-gpios\n");
+		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
+				     "Failed to get reset-gpios\n");
 
-	// TODO: Let's not hardcode the nodes and count the number of ports instead?
-	dual_dsi = true;
-	// (u64)of_device_get_match_data(dev) & HAS_DUAL_DSI;
+	dsi_sec = of_graph_get_remote_node(dsi->dev.of_node, 1, -1);
 
-	if (dual_dsi) {
-		dev_notice(dev, "Starting search for dsi1\n");
+	if (dsi_sec) {
+		dev_notice(dev, "Using Dual-DSI\n");
 
-		dsi_sec = of_graph_get_remote_node(dsi->dev.of_node, 1, -1);
-		if (!dsi_sec) {
-			dev_err(dev, "Cannot get secondary DSI node.\n");
-			return -ENODEV;
-		}
-
-		const struct mipi_dsi_device_info info = { "AMB650YL01", 0, NULL/* dsi_sec */ };
+		const struct mipi_dsi_device_info info = { "AMB650YL01", 0,
+							   dsi_sec };
 
 		dev_notice(dev, "Found second DSI `%s`\n", dsi_sec->name);
 
 		dsi_sec_host = of_find_mipi_dsi_host_by_node(dsi_sec);
 		of_node_put(dsi_sec);
 		if (!dsi_sec_host) {
-			dev_err(dev, "Cannot get secondary DSI host\n");
-			return -EPROBE_DEFER;
+			return dev_err_probe(dev, -EPROBE_DEFER,
+					     "Cannot get secondary DSI host\n");
 		}
 
-		ctx->dsi[1] = mipi_dsi_device_register_full(dsi_sec_host, &info);
-		if (!ctx->dsi[1]) {
-			dev_err(dev, "Cannot get secondary DSI node\n");
-			return -ENODEV;
+		ctx->dsi[1] =
+			mipi_dsi_device_register_full(dsi_sec_host, &info);
+		if (IS_ERR(ctx->dsi[1])) {
+			return dev_err_probe(dev, PTR_ERR(ctx->dsi[1]),
+					     "Cannot get secondary DSI node\n");
 		}
 
 		dev_notice(dev, "Second DSI name `%s`\n", ctx->dsi[1]->name);
 		mipi_dsi_set_drvdata(ctx->dsi[1], ctx);
+	} else {
+		dev_notice(dev, "Using Single-DSI\n");
 	}
 
 	ctx->dsi[0] = dsi;
@@ -517,32 +496,34 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 	drm_panel_add(&ctx->panel);
 
 	ctx->dsc.dsc_version_major = 1;
-	ctx->dsc.dsc_version_minor = 1;
+	ctx->dsc.dsc_version_minor = 1; /* TODO: Could this be ver 2? */
 
 	ctx->dsc.slice_height = 32;
-	ctx->dsc.slice_count = 2;
+	/* Downstream sets this while parsing DT */
+	ctx->dsc.slice_count = 1;
 	/*
 	 * hdisplay should be read from the selected mode once
 	 * it is passed back to drm_panel (in prepare?)
 	 */
-	WARN_ON(1096 % ctx->dsc.slice_count);
-	ctx->dsc.slice_width = 1096 / ctx->dsc.slice_count;
+	// WARN_ON(1096 % ctx->dsc.slice_count);
+	ctx->dsc.slice_width = hdisplay / 2; //1096 / ctx->dsc.slice_count;
 	ctx->dsc.bits_per_component = 8;
 	ctx->dsc.bits_per_pixel = 8 << 4; /* 4 fractional bits */
 	ctx->dsc.block_pred_enable = true;
 
 	/* This panel only supports DSC; unconditionally enable it */
-	ctx->dsi[0]->dsc = &ctx->dsc;
 
-	for (i = 0; i <= dual_dsi; i++) {
+	for (i = 0; i < ARRAY_SIZE(ctx->dsi); i++) {
 		if (!ctx->dsi[i])
 			continue;
+
+		ctx->dsi[i]->dsc = &ctx->dsc;
 
 		dev_notice(&ctx->dsi[i]->dev, "Binding DSI %d\n", i);
 
 		// TODO: KP when calling mipi_dsi_attach below?
-		if (i > 0)
-			continue;
+		// if (i > 0)
+		// 	continue;
 
 		ctx->dsi[i]->lanes = 4;
 		ctx->dsi[i]->format = MIPI_DSI_FMT_RGB888;
@@ -550,9 +531,9 @@ static int ana6707_amb650yl01_probe(struct mipi_dsi_device *dsi)
 
 		ret = mipi_dsi_attach(ctx->dsi[i]);
 		if (ret < 0) {
-			dev_err(dev, "Failed to attach to DSI%d: %d\n", i, ret);
 			drm_panel_remove(&ctx->panel);
-			return ret;
+			return dev_err_probe(dev, ret,
+					     "Failed to attach to DSI%d\n", i);
 		}
 	}
 
@@ -574,7 +555,7 @@ static void ana6707_amb650yl01_remove(struct mipi_dsi_device *dsi)
 }
 
 static const struct of_device_id ana6707_amb650yl01_of_match[] = {
-	{ .compatible = "sony,ana6707-amb650yl01", .data = (void *)HAS_DUAL_DSI },
+	{ .compatible = "sony,ana6707-amb650yl01" },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, ana6707_amb650yl01_of_match);
@@ -589,6 +570,6 @@ static struct mipi_dsi_driver ana6707_amb650yl01_driver = {
 };
 module_mipi_dsi_driver(ana6707_amb650yl01_driver);
 
-MODULE_AUTHOR("linux-mdss-dsi-panel-driver-generator <fix@me>"); // FIXME
-MODULE_DESCRIPTION("DRM driver for 9");
+MODULE_AUTHOR("Marijn Suijten <marijn.suijten@somainline.org>");
+MODULE_DESCRIPTION("DRM panel driver for the Samsung ANA6707 Driver-IC");
 MODULE_LICENSE("GPL");
