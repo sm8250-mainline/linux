@@ -89,6 +89,7 @@ static enum power_supply_property mm8013_battery_props[] = {
 	POWER_SUPPLY_PROP_CURRENT_NOW,
 	POWER_SUPPLY_PROP_CYCLE_COUNT,
 	POWER_SUPPLY_PROP_HEALTH,
+	POWER_SUPPLY_PROP_PRESENT,
 	POWER_SUPPLY_PROP_STATUS,
 	POWER_SUPPLY_PROP_TEMP,
 	POWER_SUPPLY_PROP_TIME_TO_EMPTY_AVG,
@@ -156,6 +157,9 @@ static int mm8013_get_property(struct power_supply *psy,
 			val->intval = POWER_SUPPLY_HEALTH_OVERHEAT;
 		else
 			val->intval = POWER_SUPPLY_HEALTH_GOOD;
+		break;
+	case POWER_SUPPLY_PROP_PRESENT:
+		val->intval = mm8013_read_reg(client, REG_TEMPERATURE) > 0;
 		break;
 	case POWER_SUPPLY_PROP_STATUS:
 		ret = mm8013_read_reg(client, REG_FLAGS);
