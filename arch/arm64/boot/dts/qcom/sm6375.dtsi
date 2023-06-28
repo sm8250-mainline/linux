@@ -976,6 +976,12 @@
 			status = "disabled";
 		};
 
+		refgen: regulator@162f000 {
+			compatible = "qcom,sm6375-refgen-regulator",
+				     "qcom,sm8250-refgen-regulator";
+			reg = <0 0x0162f000 0 0x84>;
+		};
+
 		system_noc: interconnect@1880000 {
 			compatible = "qcom,sm6375-snoc";
 			reg = <0 0x01880000 0 0x5f080>;
@@ -1910,6 +1916,8 @@
 
 				operating-points-v2 = <&dsi_opp_table>;
 				power-domains = <&rpmpd SM6375_VDDCX>;
+
+				refgen-supply = <&refgen>;
 
 				phys = <&mdss_dsi0_phy>;
 				phy-names = "dsi";
