@@ -27,18 +27,18 @@
 		#size-cells = <2>;
 		ranges;
 
-		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
+		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
 
-		framebuffer0: framebuffer@9c000000 {
-			compatible = "simple-framebuffer";
-			reg = <0x0 0x9c000000 0x0 (2560 * 1600 * 4)>;
-			width = <2560>;
-			height = <1600>;
-			stride = <(2560 * 4)>;
-			format = "a8r8g8b8";
-			clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
-					 <&gcc GCC_DISP_SF_AXI_CLK>;
-		};
+		//framebuffer0: framebuffer@9c000000 {
+		//	compatible = "simple-framebuffer";
+		//	reg = <0x0 0x9c000000 0x0 (2560 * 1600 * 4)>;
+		//	width = <2560>;
+		//	height = <1600>;
+		//	stride = <(2560 * 4)>;
+		//	format = "a8r8g8b8";
+		//	clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
+		//			 <&gcc GCC_DISP_SF_AXI_CLK>;
+		//};
 	};
 
 	gpio-keys {
@@ -59,55 +59,51 @@
 		};
 	};
 
-	vph_pwr: vph-pwr-regulator {
-		compatible = "regulator-fixed";
-		regulator-name = "vph_pwr";
-		regulator-min-microvolt = <3700000>;
-		regulator-max-microvolt = <3700000>;
-	};
+	//vph_pwr: vph-pwr-regulator {
+	//	compatible = "regulator-fixed";
+	//	regulator-name = "vph_pwr";
+	//	regulator-min-microvolt = <3700000>;
+	//	regulator-max-microvolt = <3700000>;
+	//};
 
-	/* S6c is really ebi.lvl but it's there for supply map completeness sake. */
-	vreg_s6c: smpc6-regulator {
-		compatible = "regulator-fixed";
-		regulator-name = "vreg_s6c";
+	///* S6c is really ebi.lvl but it's there for supply map completeness sake. */
+	//vreg_s6c: smpc6-regulator {
+	//	compatible = "regulator-fixed";
+	//	regulator-name = "vreg_s6c";
 
-		regulator-min-microvolt = <880000>;
-		regulator-max-microvolt = <880000>;
-		regulator-always-on;
-		vin-supply = <&vph_pwr>;
-	};
+	//	regulator-min-microvolt = <880000>;
+	//	regulator-max-microvolt = <880000>;
+	//	regulator-always-on;
+	//	vin-supply = <&vph_pwr>;
+	//};
 };
 
-&adsp {
-	firmware-name = "qcom/sm8250/LENOVO/J716F/adsp.mbn";
-	status = "okay";
-};
-
-&aoncc {
-	status = "disabled";
-};
+//&adsp {
+//	firmware-name = "qcom/sm8250/LENOVO/J716F/adsp.mbn";
+//	status = "okay";
+//};
 
 &apps_rsc {
     regulators-0 {
         compatible = "qcom,pm8150-rpmh-regulators";
         qcom,pmic-id = "a";
 
-		vdd-s1-supply = <&vph_pwr>;
-		vdd-s2-supply = <&vph_pwr>;
-		vdd-s3-supply = <&vph_pwr>;
-		vdd-s4-supply = <&vph_pwr>;
-		vdd-s5-supply = <&vph_pwr>;
-		vdd-s6-supply = <&vph_pwr>;
-		vdd-s7-supply = <&vph_pwr>;
-		vdd-s8-supply = <&vph_pwr>;
-		vdd-s9-supply = <&vph_pwr>;
-		vdd-s10-supply = <&vph_pwr>;
-		vdd-l1-l8-l11-supply = <&vreg_s6c>;
-		vdd-l2-l10-supply = <&vreg_bob>;
-		vdd-l3-l4-l5-l18-supply = <&vreg_s6a>;
-		vdd-l6-l9-supply = <&vreg_s8c>;
-		vdd-l7-l12-l14-l15-supply = <&vreg_s5a>;
-		vdd-l13-l16-l17-supply = <&vreg_bob>;
+		//vdd-s1-supply = <&vph_pwr>;
+		//vdd-s2-supply = <&vph_pwr>;
+		//vdd-s3-supply = <&vph_pwr>;
+		//vdd-s4-supply = <&vph_pwr>;
+		//vdd-s5-supply = <&vph_pwr>;
+		//vdd-s6-supply = <&vph_pwr>;
+		//vdd-s7-supply = <&vph_pwr>;
+		//vdd-s8-supply = <&vph_pwr>;
+		//vdd-s9-supply = <&vph_pwr>;
+		//vdd-s10-supply = <&vph_pwr>;
+		//vdd-l1-l8-l11-supply = <&vreg_s6c>;
+		//vdd-l2-l10-supply = <&vreg_bob>;
+		//vdd-l3-l4-l5-l18-supply = <&vreg_s6a>;
+		//vdd-l6-l9-supply = <&vreg_s8c>;
+		//vdd-l7-l12-l14-l15-supply = <&vreg_s5a>;
+		//vdd-l13-l16-l17-supply = <&vreg_bob>;
 
 		/* (S1+S2+S3) - cx.lvl (ARC) */
 
@@ -246,20 +242,20 @@
 		compatible = "qcom,pm8150l-rpmh-regulators";
 		qcom,pmic-id = "c";
 
-		vdd-s1-supply = <&vph_pwr>;
-		vdd-s2-supply = <&vph_pwr>;
-		vdd-s3-supply = <&vph_pwr>;
-		vdd-s4-supply = <&vph_pwr>;
-		vdd-s5-supply = <&vph_pwr>;
-		vdd-s6-supply = <&vph_pwr>;
-		vdd-s7-supply = <&vph_pwr>;
-		vdd-s8-supply = <&vph_pwr>;
-		vdd-l1-l8-supply = <&vreg_s4a>;
-		vdd-l2-l3-supply = <&vreg_s8c>;
-		vdd-l4-l5-l6-supply = <&vreg_bob>;
-		vdd-l7-l11-supply = <&vreg_bob>;
-		vdd-l9-l10-supply = <&vreg_bob>;
-		vdd-bob-supply = <&vph_pwr>;
+		//vdd-s1-supply = <&vph_pwr>;
+		//vdd-s2-supply = <&vph_pwr>;
+		//vdd-s3-supply = <&vph_pwr>;
+		//vdd-s4-supply = <&vph_pwr>;
+		//vdd-s5-supply = <&vph_pwr>;
+		//vdd-s6-supply = <&vph_pwr>;
+		//vdd-s7-supply = <&vph_pwr>;
+		//vdd-s8-supply = <&vph_pwr>;
+		//vdd-l1-l8-supply = <&vreg_s4a>;
+		//vdd-l2-l3-supply = <&vreg_s8c>;
+		//vdd-l4-l5-l6-supply = <&vreg_bob>;
+		//vdd-l7-l11-supply = <&vreg_bob>;
+		//vdd-l9-l10-supply = <&vreg_bob>;
+		//vdd-bob-supply = <&vph_pwr>;
 
 		vreg_bob: bob {
 			regulator-name = "vreg_bob";
@@ -374,11 +370,11 @@
 		compatible = "qcom,pm8009-rpmh-regulators";
 		qcom,pmic-id = "f";
 
-		vdd-s1-supply = <&vph_pwr>;
-		vdd-s2-supply = <&vreg_bob>;
-		vdd-l2-supply = <&vreg_s8c>;
-		vdd-l5-l6-supply = <&vreg_bob>;
-		vdd-l7-supply = <&vreg_s4a>;
+		//vdd-s1-supply = <&vph_pwr>;
+		//vdd-s2-supply = <&vreg_bob>;
+		//vdd-l2-supply = <&vreg_s8c>;
+		//vdd-l5-l6-supply = <&vreg_bob>;
+		//vdd-l7-supply = <&vreg_s4a>;
 
 		vreg_s1f: smps1 {
 			regulator-name = "vreg_s1f";
@@ -445,30 +441,26 @@
 	};
 };
 
-&audiocc {
-	status = "disabled";
-};
-
-&cdsp {
-	firmware-name = "qcom/sm8250/LENOVO/J716F/cdsp.mbn";
-	status = "okay";
-};
+//&cdsp {
+//	firmware-name = "qcom/sm8250/LENOVO/J716F/cdsp.mbn";
+//	status = "okay";
+//};
 
 &gmu {
 	status = "okay";
 };
 
-&gpi_dma0 {
-	status = "okay";
-};
-
-&gpi_dma1 {
-	status = "okay";
-};
-
-&gpi_dma2 {
-	status = "okay";
-};
+//&gpi_dma0 {
+//	status = "okay";
+//};
+//
+//&gpi_dma1 {
+//	status = "okay";
+//};
+//
+//&gpi_dma2 {
+//	status = "okay";
+//};
 
 &gpu {
 	status = "okay";
@@ -479,56 +471,52 @@
 	};
 };
 
-&i2c1 {
-	clock-frequency = <1000000>;
-	status = "okay";
-
-	/* hid-over-i2c touchpad @ 60 */
-};
-
-&i2c3 {
-	clock-frequency = <400000>;
-	status = "okay";
-
-	bq27541@55 {
-		compatible = "ti,bq27541";
-		reg = <0x55>;
-	};
-};
-
-&i2c4 {
-	clock-frequency = <400000>;
-	status = "okay";
-
-	/* onsemi NB7VPQ904M (USB Redriver) @ 19 */
-	/* Cirrus CS35L41 (Speaker 1) @ 40 */
-	/* Cirrus CS35L41 (Speaker 2) @ 41 */
-	/* Cirrus CS35L41 (Speaker 3) @ 42 */
-	/* Cirrus CS35L41 (Speaker 4) @ 43 */
-	/* hid-over-i2c keyboard @ 61 */
-};
-
-&i2c13 {
-	clock-frequency = <400000>;
-	status = "okay";
-
-	/* Goodix GT7386 (Touchscreen) @ 5d */
-};
-
-&i2c15 {
-	clock-frequency = <400000>;
-	status = "okay";
-
-	/* Qcom SMB1390 @ 10 */
-	/* HALO HL6111R Qi charger @ 25 */
-	/* Everest-semi ES7210 4-ch ADC @ 40 */
-	/* onsemi FSA4480 USB-C audio switch @ 43 */
-	/* Richwave RTC6226 FM Radio Receiver @ 64 */
-};
-
-&lpass_tlmm {
-	status = "disabled";
-};
+//&i2c1 {
+//	clock-frequency = <1000000>;
+//	status = "okay";
+//
+//	/* hid-over-i2c touchpad @ 60 */
+//};
+//
+//&i2c3 {
+//	clock-frequency = <400000>;
+//	status = "okay";
+//
+//	bq27541@55 {
+//		compatible = "ti,bq27541";
+//		reg = <0x55>;
+//	};
+//};
+//
+//&i2c4 {
+//	clock-frequency = <400000>;
+//	status = "okay";
+//
+//	/* onsemi NB7VPQ904M (USB Redriver) @ 19 */
+//	/* Cirrus CS35L41 (Speaker 1) @ 40 */
+//	/* Cirrus CS35L41 (Speaker 2) @ 41 */
+//	/* Cirrus CS35L41 (Speaker 3) @ 42 */
+//	/* Cirrus CS35L41 (Speaker 4) @ 43 */
+//	/* hid-over-i2c keyboard @ 61 */
+//};
+//
+//&i2c13 {
+//	clock-frequency = <400000>;
+//	status = "okay";
+//
+//	/* Goodix GT7386 (Touchscreen) @ 5d */
+//};
+//
+//&i2c15 {
+//	clock-frequency = <400000>;
+//	status = "okay";
+//
+//	/* Qcom SMB1390 @ 10 */
+//	/* HALO HL6111R Qi charger @ 25 */
+//	/* Everest-semi ES7210 4-ch ADC @ 40 */
+//	/* onsemi FSA4480 USB-C audio switch @ 43 */
+//	/* Richwave RTC6226 FM Radio Receiver @ 64 */
+//};
 
 &mdss {
 	status = "okay";
@@ -548,9 +536,9 @@
 		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
 		status = "okay";
 
-		pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
-		pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
-		pinctrl-names = "default", "sleep";
+		//pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
+		//pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
+		//pinctrl-names = "default", "sleep";
 
 		ports {
 			#address-cells = <1>;
@@ -604,57 +592,57 @@
 	status = "okay";
 };
 
-&pon_pwrkey {
-	status = "okay";
-};
-
-&pon_resin {
-	linux,code = <KEY_VOLUMEDOWN>;
-	status = "okay";
-};
-
-&qupv3_id_0 {
-	status = "okay";
-};
-
-&qupv3_id_1 {
-	status = "okay";
-};
-
-&qupv3_id_2 {
-	status = "okay";
-};
-
-&slpi {
-	firmware-name = "qcom/sm8250/LENOVO/J716F/slpi.mbn";
-	status = "okay";
-};
+//&pon_pwrkey {
+//	status = "okay";
+//};
+//
+//&pon_resin {
+//	linux,code = <KEY_VOLUMEDOWN>;
+//	status = "okay";
+//};
+//
+//&qupv3_id_0 {
+//	status = "okay";
+//};
+//
+//&qupv3_id_1 {
+//	status = "okay";
+//};
+//
+//&qupv3_id_2 {
+//	status = "okay";
+//};
+//
+//&slpi {
+//	firmware-name = "qcom/sm8250/LENOVO/J716F/slpi.mbn";
+//	status = "okay";
+//};
 
 &tlmm {
 	gpio-reserved-ranges = <40 4>;
 
-	sde_dsi_active: sde-dsi-active {
-		//pins = "gpio75", "gpio60";
-		pins = "gpio75";
-		function = "gpio";
-		drive-strength = <8>;
-		bias-disable;
-	};
+	//sde_dsi_active: sde-dsi-active {
+	//	pins = "gpio75", "gpio60";
+	//	//pins = "gpio75";
+	//	function = "gpio";
+	//	drive-strength = <8>;
+	//	bias-disable;
+	//};
 
-	sde_dsi_sleep: sde-dsi-sleep {
-		//pins = "gpio75", "gpio60";
-		pins = "gpio75";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-down;
-	};
+	//sde_dsi_sleep: sde-dsi-sleep {
+	//	pins = "gpio75", "gpio60";
+	//	//pins = "gpio75";
+	//	function = "gpio";
+	//	drive-strength = <2>;
+	//	bias-pull-down;
+	//};
 
-	sde_te_active_sleep: sde-te-active-sleep {
-		pins = "gpio66";
-		function = "mdp_vsync";
-		drive-strength = <2>;
-		bias-pull-down;
-	};
+	//sde_te_active_sleep: sde-te-active-sleep {
+	//	pins = "gpio66";
+	//	function = "mdp_vsync";
+	//	drive-strength = <2>;
+	//	bias-pull-down;
+	//};
 };
 
 &ufs_mem_hc {
@@ -692,8 +680,4 @@
 	vdda-phy-supply = <&vreg_l9a>;
 	vdda-pll-supply = <&vreg_l18a>;
 	status = "okay";
-};
-
-&vamacro {
-	status = "disabled";
 };
