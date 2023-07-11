@@ -534,7 +534,7 @@
 	status = "okay";
 };
 
-&dsi0 {
+&mdss_dsi0 {
 	vdda-supply = <&vreg_l9a>;
 	status = "okay";
 
@@ -554,19 +554,19 @@
 				reg = <0>;
 
 				panel_in_0: endpoint {
-					remote-endpoint = <&dsi0_out>;
+					remote-endpoint = <&mdss_dsi0_out>;
 				};
 			};
 		};
 	};
 };
 
-&dsi0_out {
+&mdss_dsi0_out {
 	remote-endpoint = <&panel_in_0>;
 	data-lanes = <0 1 2 3>;
 };
 
-&dsi0_phy {
+&mdss_dsi0_phy {
 	vdds-supply = <&vreg_l5a>;
 	status = "okay";
 };
