@@ -536,15 +536,21 @@
 
 &mdss_dsi0 {
 	vdda-supply = <&vreg_l9a>;
+	qcom,dual-dsi-mode;
+	qcom,sync-dual-dsi;
+	qcom,master-dsi;
 	status = "okay";
 
 	panel@0 {
-		compatible = "mdss,rm69380-edo-amoled";
+		compatible = "lenovo,j716f-edo-rm69380";
 		reg = <0>;
-		vci-supply = <&vreg_l11c>;
 		vddio-supply = <&vreg_l14a>;
 		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
 		status = "okay";
+
+		pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
+		pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
+		pinctrl-names = "default", "sleep";
 
 		ports {
 			#address-cells = <1>;
@@ -557,6 +563,14 @@
 					remote-endpoint = <&mdss_dsi0_out>;
 				};
 			};
+
+			port@1{
+				reg = <1>;
+
+				panel_in_1: endpoint {
+					remote-endpoint = <&mdss_dsi1_out>;
+				};
+			};
 		};
 	};
 };
@@ -567,6 +581,25 @@
 };
 
 &mdss_dsi0_phy {
+	vdds-supply = <&vreg_l5a>;
+	status = "okay";
+};
+
+&mdss_dsi1 {
+	vdda-supply = <&vreg_l9a>;
+	qcom,dual-dsi-mode;
+	qcom,sync-dual-dsi;
+	/* DSI1 is slave, so use DSI0 clocks */
+	assigned-clock-parents = <&mdss_dsi0_phy 0>, <&mdss_dsi0_phy 1>;
+	status = "okay";
+};
+
+&mdss_dsi1_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in_1>;
+};
+
+&mdss_dsi1_phy {
 	vdds-supply = <&vreg_l5a>;
 	status = "okay";
 };
@@ -599,6 +632,29 @@
 
 &tlmm {
 	gpio-reserved-ranges = <40 4>;
+
+	sde_dsi_active: sde-dsi-active {
+		//pins = "gpio75", "gpio60";
+		pins = "gpio75";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	sde_dsi_sleep: sde-dsi-sleep {
+		//pins = "gpio75", "gpio60";
+		pins = "gpio75";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	sde_te_active_sleep: sde-te-active-sleep {
+		pins = "gpio66";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
 };
 
 &ufs_mem_hc {
