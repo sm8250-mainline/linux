@@ -1625,9 +1625,9 @@ static void aw88395_parse_fade_enable_dt(struct aw_device *aw_dev)
 	aw_dev->fade_en = fade_en;
 }
 
-static int aw_dev_init(struct aw_device *aw_dev)
+static int aw_dev_init(struct aw_device *aw_dev, u16 chip_id)
 {
-	aw_dev->chip_id = AW88395_CHIP_ID;
+	aw_dev->chip_id = chip_id;
 	/* call aw device init func */
 	aw_dev->acf = NULL;
 	aw_dev->prof_info.prof_desc = NULL;
@@ -1731,8 +1731,9 @@ int aw88395_init(struct aw_device **aw_dev, struct i2c_client *i2c, struct regma
 	}
 
 	switch (chip_id) {
+	case AW882XX_CHIP_ID:
 	case AW88395_CHIP_ID:
-		ret = aw_dev_init((*aw_dev));
+		ret = aw_dev_init(*aw_dev, chip_id);
 		break;
 	default:
 		ret = -EINVAL;
