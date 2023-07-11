@@ -566,9 +566,18 @@ static const struct i2c_device_id aw88395_i2c_id[] = {
 };
 MODULE_DEVICE_TABLE(i2c, aw88395_i2c_id);
 
+#ifdef CONFIG_OF
+static const struct of_device_id aw88395_of_match[] = {
+	{ .compatible = "awinic,aw88395" },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, aw88395_of_match);
+#endif
+
 static struct i2c_driver aw88395_i2c_driver = {
 	.driver = {
 		.name = AW88395_I2C_NAME,
+		.of_match_table = of_match_ptr(aw88395_of_match),
 	},
 	.probe = aw88395_i2c_probe,
 	.id_table = aw88395_i2c_id,
