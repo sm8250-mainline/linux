@@ -534,16 +534,14 @@
 	status = "okay";
 };
 
-&mdss_dsi0 {
+&dsi0 {
 	vdda-supply = <&vreg_l9a>;
-	qcom,dual-dsi-mode;
-	qcom,sync-dual-dsi;
-	qcom,master-dsi;
 	status = "okay";
 
 	panel@0 {
 		compatible = "mdss,rm69380-edo-amoled";
 		reg = <0>;
+		vci-supply = <&vreg_l11c>;
 		vddio-supply = <&vreg_l14a>;
 		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
 		status = "okay";
@@ -556,46 +554,19 @@
 				reg = <0>;
 
 				panel_in_0: endpoint {
-					remote-endpoint = <&mdss_dsi0_out>;
-				};
-			};
-
-			port@1{
-				reg = <1>;
-
-				panel_in_1: endpoint {
-					remote-endpoint = <&mdss_dsi1_out>;
+					remote-endpoint = <&dsi0_out>;
 				};
 			};
 		};
 	};
 };
 
-&mdss_dsi0_out {
-	data-lanes = <0 1 2>;
+&dsi0_out {
 	remote-endpoint = <&panel_in_0>;
+	data-lanes = <0 1 2 3>;
 };
 
-&mdss_dsi0_phy {
-	vdds-supply = <&vreg_l5a>;
-	status = "okay";
-};
-
-&mdss_dsi1 {
-	vdda-supply = <&vreg_l9a>;
-	qcom,dual-dsi-mode;
-	qcom,sync-dual-dsi;
-	/* DSI1 is slave, so use DSI0 clocks */
-	assigned-clock-parents = <&mdss_dsi0_phy 0>, <&mdss_dsi0_phy 1>;
-	status = "okay";
-};
-
-&mdss_dsi1_out {
-	data-lanes = <0 1 2>;
-	remote-endpoint = <&panel_in_1>;
-};
-
-&mdss_dsi1_phy {
+&dsi0_phy {
 	vdds-supply = <&vreg_l5a>;
 	status = "okay";
 };
