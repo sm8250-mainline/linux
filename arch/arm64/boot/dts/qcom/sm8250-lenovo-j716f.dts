@@ -27,18 +27,18 @@
 		#size-cells = <2>;
 		ranges;
 
-		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
+		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0 clk_ignore_unused pd_ignore_unused";
 
-		//framebuffer0: framebuffer@9c000000 {
-		//	compatible = "simple-framebuffer";
-		//	reg = <0x0 0x9c000000 0x0 (2560 * 1600 * 4)>;
-		//	width = <2560>;
-		//	height = <1600>;
-		//	stride = <(2560 * 4)>;
-		//	format = "a8r8g8b8";
-		//	clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
-		//			 <&gcc GCC_DISP_SF_AXI_CLK>;
-		//};
+		framebuffer0: framebuffer@9c000000 {
+			compatible = "simple-framebuffer";
+			reg = <0x0 0x9c000000 0x0 (2560 * 1600 * 4)>;
+			width = <2560>;
+			height = <1600>;
+			stride = <(2560 * 4)>;
+			format = "a8r8g8b8";
+			//clocks = <&gcc GCC_DISP_HF_AXI_CLK>,
+			//		 <&gcc GCC_DISP_SF_AXI_CLK>;
+		};
 	};
 
 	gpio-keys {

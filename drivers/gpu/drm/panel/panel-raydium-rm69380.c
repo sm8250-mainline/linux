@@ -375,6 +375,7 @@ static int rm69380_probe(struct mipi_dsi_device *dsi)
 		pinfo->dsi[i]->lanes = pinfo->desc->lanes;
 		pinfo->dsi[i]->format = pinfo->desc->format;
 		pinfo->dsi[i]->mode_flags = pinfo->desc->mode_flags;
+		pinfo->dsi[i]->panel.prepare_prev_first = true
 
 		ret = mipi_dsi_attach(pinfo->dsi[i]);
 		if (ret < 0)
