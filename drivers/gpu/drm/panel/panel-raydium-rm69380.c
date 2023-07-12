@@ -358,6 +358,8 @@ static int rm69380_probe(struct mipi_dsi_device *dsi)
 	mipi_dsi_set_drvdata(dsi, pinfo);
 	drm_panel_init(&pinfo->panel, dev, &rm69380_panel_funcs, DRM_MODE_CONNECTOR_DSI);
 
+	pinfo->panel.prepare_prev_first = true;
+
 	if (pinfo->desc->has_dcs_backlight) {
 		pinfo->panel.backlight = rm69380_create_backlight(dsi);
 		if (IS_ERR(pinfo->panel.backlight))
@@ -375,7 +377,6 @@ static int rm69380_probe(struct mipi_dsi_device *dsi)
 		pinfo->dsi[i]->lanes = pinfo->desc->lanes;
 		pinfo->dsi[i]->format = pinfo->desc->format;
 		pinfo->dsi[i]->mode_flags = pinfo->desc->mode_flags;
-		pinfo->dsi[i]->panel.prepare_prev_first = true
 
 		ret = mipi_dsi_attach(pinfo->dsi[i]);
 		if (ret < 0)
