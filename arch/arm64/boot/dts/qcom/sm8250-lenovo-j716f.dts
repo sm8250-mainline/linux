@@ -622,16 +622,16 @@
 	gpio-reserved-ranges = <40 4>;
 
 	sde_dsi_active: sde-dsi-active {
-		//pins = "gpio75", "gpio60";
-		pins = "gpio75";
+		pins = "gpio75", "gpio60";
+		//pins = "gpio75";
 		function = "gpio";
 		drive-strength = <8>;
 		bias-disable;
 	};
 
 	sde_dsi_sleep: sde-dsi-sleep {
-		//pins = "gpio75", "gpio60";
-		pins = "gpio75";
+		pins = "gpio75", "gpio60";
+		//pins = "gpio75";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
