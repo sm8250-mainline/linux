@@ -27,7 +27,7 @@
 		#size-cells = <2>;
 		ranges;
 
-		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0 clk_ignore_unused pd_ignore_unused";
+		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
 
 		framebuffer0: framebuffer@9c000000 {
 			compatible = "simple-framebuffer";
@@ -536,9 +536,9 @@
 		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
 		status = "okay";
 
-		//pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
-		//pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
-		//pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
+		pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
+		pinctrl-names = "default", "sleep";
 
 		ports {
 			#address-cells = <1>;
@@ -621,28 +621,28 @@
 &tlmm {
 	gpio-reserved-ranges = <40 4>;
 
-	//sde_dsi_active: sde-dsi-active {
-	//	pins = "gpio75", "gpio60";
-	//	//pins = "gpio75";
-	//	function = "gpio";
-	//	drive-strength = <8>;
-	//	bias-disable;
-	//};
+	sde_dsi_active: sde-dsi-active {
+		//pins = "gpio75", "gpio60";
+		pins = "gpio75";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
 
-	//sde_dsi_sleep: sde-dsi-sleep {
-	//	pins = "gpio75", "gpio60";
-	//	//pins = "gpio75";
-	//	function = "gpio";
-	//	drive-strength = <2>;
-	//	bias-pull-down;
-	//};
+	sde_dsi_sleep: sde-dsi-sleep {
+		//pins = "gpio75", "gpio60";
+		pins = "gpio75";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
 
-	//sde_te_active_sleep: sde-te-active-sleep {
-	//	pins = "gpio66";
-	//	function = "mdp_vsync";
-	//	drive-strength = <2>;
-	//	bias-pull-down;
-	//};
+	sde_te_active_sleep: sde-te-active-sleep {
+		pins = "gpio66";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
 };
 
 &ufs_mem_hc {
