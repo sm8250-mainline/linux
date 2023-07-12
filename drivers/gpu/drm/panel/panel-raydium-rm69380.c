@@ -58,16 +58,19 @@ struct panel_desc {
 	bool has_dcs_backlight;
 };
 
-static inline
-struct panel_info *to_panel_info(struct drm_panel *panel)
+static inline struct panel_info *to_panel_info(struct drm_panel *panel)
 {
 	return container_of(panel, struct panel_info, panel);
 }
 
+//90Hz?
 static int j716f_edo_init_sequence(struct panel_info *pinfo)
 {
 	struct mipi_dsi_device *dsi0 = pinfo->dsi[0];
 	struct mipi_dsi_device *dsi1 = pinfo->dsi[1];
+
+	pinfo->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
+	pinfo->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0xd4);
 	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x00, 0x80);
@@ -82,15 +85,49 @@ static int j716f_edo_init_sequence(struct panel_info *pinfo)
 	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x35, 0x00);
 	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x51, 0x07, 0xff);
 	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x11, 0x00);
-	msleep(70); //TODO: Is this needed?
+	msleep(20);
 	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x29, 0x00);
+	msleep(36);
 
 	return 0;
 }
 
+//60Hz?
+/*static int j716f_edo_init_sequence(struct panel_info *pinfo)
+{
+	struct mipi_dsi_device *dsi0 = pinfo->dsi[0];
+	struct mipi_dsi_device *dsi1 = pinfo->dsi[1];
+	int i;
+
+	for (i = 0; i < DSI_NUM_MIN + pinfo->desc->is_dual_dsi; i++) {
+		pinfo->dsi[i]->mode_flags |= MIPI_DSI_MODE_LPM;
+	}
+
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0xd4);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x00, 0x80);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0xd0);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x48, 0x00);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0x26);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x75, 0x3f);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x1d, 0x1a);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0x40);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xbd, 0x05);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0x00);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x53, 0x28);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xc2, 0x08);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x35, 0x00);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x51, 0x07, 0xff);
+	msleep(20);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x11, 0x00);
+	msleep(36);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x29, 0x00);
+
+	return 0;
+}*/
+
 static const struct drm_display_mode j716f_edo_modes[] = {
 	{
-		.clock = (2560 + 64 + 24 + 76) * (1600 + 20 + 4 + 8) * 90 / 1000,
+		.clock = (2560 + 64 + 24 + 76) * (1600 + 20 + 4 + 8) * 60 / 1000,
 		.hdisplay = 2560,
 		.hsync_start = 2560 + 64,
 		.hsync_end = 2560 + 64 + 24,
@@ -115,7 +152,7 @@ static const struct panel_desc j716f_edo_desc = {
 	.bpc = 8,
 	.lanes = 4,
 	.format = MIPI_DSI_FMT_RGB888,
-	.mode_flags = MIPI_DSI_MODE_VIDEO_BURST | MIPI_DSI_CLOCK_NON_CONTINUOUS | MIPI_DSI_MODE_LPM, //TODO Is MIPI_DSI_MODE_VIDEO_BURST correct?
+	.mode_flags = MIPI_DSI_MODE_VIDEO_BURST | MIPI_DSI_CLOCK_NON_CONTINUOUS | MIPI_DSI_MODE_LPM,
 	.init_sequence = j716f_edo_init_sequence,
 	.is_dual_dsi = true,
 };
@@ -166,16 +203,18 @@ static int rm69380_disable(struct drm_panel *panel)
 	for (i = 0; i < DSI_NUM_MIN + pinfo->desc->is_dual_dsi; i++) {
 		ret = mipi_dsi_dcs_set_display_off(pinfo->dsi[i]);
 		if (ret < 0)
-			dev_err(&pinfo->dsi[i]->dev, "Failed to set display off: %d\n", ret);
+			dev_err(&pinfo->dsi[i]->dev, "failed to set display off: %d\n", ret);
 	}
+
+	msleep(35);
 
 	for (i = 0; i < DSI_NUM_MIN + pinfo->desc->is_dual_dsi; i++) {
 		ret = mipi_dsi_dcs_enter_sleep_mode(pinfo->dsi[i]);
 		if (ret < 0)
-			dev_err(&pinfo->dsi[i]->dev, "Failed to enter sleep mode: %d\n", ret);
+			dev_err(&pinfo->dsi[i]->dev, "failed to enter sleep mode: %d\n", ret);
 	}
 
-	msleep(70);
+	msleep(20);
 
 	return 0;
 }
@@ -254,7 +293,7 @@ static const struct drm_panel_funcs rm69380_panel_funcs = {
 	.get_modes = rm69380_get_modes,
 };
 
-static int rm69380_bl_update_status(struct backlight_device *bl)
+/*static int rm69380_bl_update_status(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
 	u16 brightness = backlight_get_brightness(bl);
@@ -305,7 +344,7 @@ static struct backlight_device *rm69380_create_backlight(struct mipi_dsi_device 
 
 	return devm_backlight_device_register(dev, dev_name(dev), dev, dsi,
 					      &rm69380_bl_ops, &props);
-}
+}*/
 
 static int rm69380_probe(struct mipi_dsi_device *dsi)
 {
@@ -331,6 +370,8 @@ static int rm69380_probe(struct mipi_dsi_device *dsi)
 	pinfo->desc = of_device_get_match_data(dev);
 	if (!pinfo->desc)
 		return -ENODEV;
+
+	pinfo->panel.prepare_prev_first = true;
 
 	/* If the panel is dual dsi, register DSI1 */
 	if (pinfo->desc->is_dual_dsi) {
@@ -358,9 +399,7 @@ static int rm69380_probe(struct mipi_dsi_device *dsi)
 	mipi_dsi_set_drvdata(dsi, pinfo);
 	drm_panel_init(&pinfo->panel, dev, &rm69380_panel_funcs, DRM_MODE_CONNECTOR_DSI);
 
-	pinfo->panel.prepare_prev_first = true;
-
-	if (pinfo->desc->has_dcs_backlight) {
+	/*if (pinfo->desc->has_dcs_backlight) {
 		pinfo->panel.backlight = rm69380_create_backlight(dsi);
 		if (IS_ERR(pinfo->panel.backlight))
 			return dev_err_probe(dev, PTR_ERR(pinfo->panel.backlight),
@@ -369,7 +408,7 @@ static int rm69380_probe(struct mipi_dsi_device *dsi)
 		ret = drm_panel_of_backlight(&pinfo->panel);
 		if (ret)
 			return dev_err_probe(dev, ret, "Failed to get backlight\n");
-	}
+	}*/
 
 	drm_panel_add(&pinfo->panel);
 
