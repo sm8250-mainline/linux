@@ -200,7 +200,13 @@ static const struct dpu_perf_cfg sm6125_perf_data = {
 	.bw_inefficiency_factor = 120,
 };
 
+static const struct dpu_mdss_version sm6125_mdss_ver = {
+	.core_major_ver = 5,
+	.core_minor_ver = 4,
+};
+
 const struct dpu_mdss_cfg dpu_sm6125_cfg = {
+	.mdss_ver = &sm6125_mdss_ver,
 	.caps = &sm6125_dpu_caps,
 	.ubwc = &sm6125_ubwc_cfg,
 	.mdp = &sm6125_mdp,
