@@ -2406,6 +2406,7 @@ struct drm_encoder *dpu_encoder_init(struct drm_device *dev,
 	struct dpu_kms *dpu_kms = to_dpu_kms(priv->kms);
 	struct drm_encoder *drm_enc = NULL;
 	struct dpu_encoder_virt *dpu_enc = NULL;
+	int index = disp_info->h_tile_instance[0];
 	int ret = 0;
 
 	dpu_enc = devm_kzalloc(dev->dev, sizeof(*dpu_enc), GFP_KERNEL);
@@ -2434,13 +2435,14 @@ struct drm_encoder *dpu_encoder_init(struct drm_device *dev,
 	timer_setup(&dpu_enc->frame_done_timer,
 			dpu_encoder_frame_done_timeout, 0);
 
-	if (disp_info->intf_type == INTF_DSI)
+	if (disp_info->intf_type == INTF_DSI) {
 		timer_setup(&dpu_enc->vsync_event_timer,
 				dpu_encoder_vsync_event_handler,
 				0);
-	else if (disp_info->intf_type == INTF_DP)
-		dpu_enc->wide_bus_en = msm_dp_wide_bus_available(
-				priv->dp[disp_info->h_tile_instance[0]]);
+		dpu_enc->wide_bus_en = msm_dsi_is_widebus_enabled(priv->dsi[index]);
+	} else if (disp_info->intf_type == INTF_DP) {
+		dpu_enc->wide_bus_en = msm_dp_wide_bus_available(priv->dp[index]);
+	}
 
 	INIT_DELAYED_WORK(&dpu_enc->delayed_off_work,
 			dpu_encoder_off_work);
