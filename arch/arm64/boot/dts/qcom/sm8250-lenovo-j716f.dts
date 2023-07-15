@@ -592,7 +592,7 @@
 //	vdda-supply = <&vreg_l9a>;
 //	qcom,dual-dsi-mode;
 //	qcom,sync-dual-dsi;
-//	/* DSI1 is slave, so use DSI0 clocks */
+	/* DSI1 is slave, so use DSI0 clocks */
 //	assigned-clock-parents = <&mdss_dsi0_phy 0>, <&mdss_dsi0_phy 1>;
 //	status = "okay";
 //};
@@ -604,7 +604,6 @@
 //
 //&mdss_dsi1_phy {
 //	vdds-supply = <&vreg_l5a>;
-//	//phy-type = <PHY_TYPE_CPHY>;
 //	status = "okay";
 //};
 

@@ -18,7 +18,7 @@ struct rm69380_edo_amoled {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi;
 	struct regulator_bulk_data supplies[2];
-	//struct gpio_desc *reset_gpio;
+	struct gpio_desc *reset_gpio;
 	bool prepared;
 };
 
@@ -30,12 +30,12 @@ struct rm69380_edo_amoled *to_rm69380_edo_amoled(struct drm_panel *panel)
 
 static void rm69380_edo_amoled_reset(struct rm69380_edo_amoled *ctx)
 {
-	//gpiod_set_value_cansleep(ctx->reset_gpio, 0);
-	//usleep_range(15000, 16000);
-	//gpiod_set_value_cansleep(ctx->reset_gpio, 1);
-	//usleep_range(10000, 11000);
-	//gpiod_set_value_cansleep(ctx->reset_gpio, 0);
-	//msleep(30);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	usleep_range(15000, 16000);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	usleep_range(10000, 11000);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
+	msleep(30);
 }
 
 static int rm69380_edo_amoled_on(struct rm69380_edo_amoled *ctx)
@@ -72,6 +72,8 @@ static int rm69380_edo_amoled_on(struct rm69380_edo_amoled *ctx)
 		return ret;
 	}
 	msleep(36);
+
+	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
 	return 0;
 }
@@ -116,12 +118,12 @@ static int rm69380_edo_amoled_prepare(struct drm_panel *panel)
 		return ret;
 	}
 
-	//rm69380_edo_amoled_reset(ctx);
+	rm69380_edo_amoled_reset(ctx);
 
 	ret = rm69380_edo_amoled_on(ctx);
 	if (ret < 0) {
 		dev_err(dev, "Failed to initialize panel: %d\n", ret);
-		//gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+		gpiod_set_value_cansleep(ctx->reset_gpio, 1);
 		regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
 		return ret;
 	}
@@ -143,7 +145,7 @@ static int rm69380_edo_amoled_unprepare(struct drm_panel *panel)
 	if (ret < 0)
 		dev_err(dev, "Failed to un-initialize panel: %d\n", ret);
 
-	//gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
 	regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
 
 	ctx->prepared = false;
@@ -261,10 +263,10 @@ static int rm69380_edo_amoled_probe(struct mipi_dsi_device *dsi)
 	if (ret < 0)
 		return dev_err_probe(dev, ret, "Failed to get regulators\n");
 
-	//ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
-	//if (IS_ERR(ctx->reset_gpio))
-	//	return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
-	//			     "Failed to get reset-gpios\n");
+	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+	if (IS_ERR(ctx->reset_gpio))
+		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
+				     "Failed to get reset-gpios\n");
 
 	ctx->dsi = dsi;
 	mipi_dsi_set_drvdata(dsi, ctx);
