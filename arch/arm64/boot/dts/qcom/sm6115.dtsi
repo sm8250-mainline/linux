@@ -2680,6 +2680,10 @@
 			clocks = <&rxmacro>;
 			clock-names = "iface";
 
+			resets = <&lpass_audiocc 0>;
+			reset-names = "swr_audio_cgcr";
+
+			label = "RX";
 			qcom,din-ports = <0>;
 			qcom,dout-ports = <5>;
 
@@ -2699,7 +2703,7 @@
 		};
 
 		txmacro: txmacro@a620000 {
-			compatible = "qcom,sm6115-lpass-tx-macro", "qcom,sm8250-lpass-tx-macro";
+			compatible = "qcom,sm6115-lpass-tx-macro";
 			reg = <0x0 0x0a620000 0x0 0x1000>;
 
 			clocks = <&q6afecc LPASS_CLK_ID_TX_CORE_MCLK LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
@@ -2715,12 +2719,15 @@
 			assigned-clock-rates = <19200000>,
 					       <19200000>;
 
-			pinctrl-0 = <&lpass_tx_swr_active>;
-			pinctrl-names = "default";
-
 			#clock-cells = <0>;
 			clock-output-names = "mclk";
 			#sound-dai-cells = <1>;
+		};
+
+		lpass_audiocc: clock-controller@a6a9000 {
+			compatible = "qcom,sm6115-lpassaudiocc";
+			reg = <0x0 0x0a6a9000 0x0 0x1000>;
+			#reset-cells = <1>;
 		};
 
 		vamacro: codec@a730000 {
@@ -2737,6 +2744,9 @@
 			assigned-clock-rates = <19200000>,
 					       <19200000>;
 
+			pinctrl-0 = <&lpass_tx_swr_active>;
+			pinctrl-names = "default";
+
 			#clock-cells = <0>;
 			clock-output-names = "fsgen";
 			#sound-dai-cells = <1>;
@@ -2748,10 +2758,15 @@
 			//interrupts-extended + mpm
 			interrupts = <GIC_SPI 296 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH>;
-
-			clocks = <&txmacro>;
+			clocks = <&vamacro>;
 			clock-names = "iface";
 
+			assigned-clocks = <&txmacro>;
+
+			resets = <&lpasscc 0>;
+			reset-names = "swr_audio_cgcr";
+
+			label = "VA_TX";
 			qcom,din-ports = <3>;
 			qcom,dout-ports = <0>;
 
@@ -2849,6 +2864,12 @@
 					input-enable;
 				};
 			};
+		};
+
+		lpasscc: clock-controller@a7ec000 {
+			compatible = "qcom,sm6115-lpasscc";
+			reg = <0x0 0x0a7ec000 0x0 0x1000>;
+			#reset-cells = <1>;
 		};
 
 		remoteproc_adsp: remoteproc@ab00000 {
