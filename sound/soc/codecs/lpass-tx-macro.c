@@ -253,6 +253,10 @@ struct hpf_work {
 	struct delayed_work dwork;
 };
 
+struct tx_macro_data {
+	bool has_npl_clock;
+};
+
 struct tx_macro {
 	struct device *dev;
 	struct snd_soc_component *component;
@@ -275,6 +279,7 @@ struct tx_macro {
 	int dec_mode[NUM_DECIMATORS];
 	struct lpass_macro *pds;
 	bool bcs_clk_en;
+	const struct tx_macro_data *data;
 };
 #define to_tx_macro(_hw) container_of(_hw, struct tx_macro, hw)
 
@@ -1954,16 +1959,17 @@ static int tx_macro_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct device_node *np = dev->of_node;
-	kernel_ulong_t flags;
 	struct tx_macro *tx;
 	void __iomem *base;
 	int ret, reg;
 
-	flags = (kernel_ulong_t)device_get_match_data(dev);
-
 	tx = devm_kzalloc(dev, sizeof(*tx), GFP_KERNEL);
 	if (!tx)
 		return -ENOMEM;
+
+	tx->data = of_device_get_match_data(dev);
+	if (!tx->data)
+		return dev_err_probe(dev, EINVAL, "Missing match data\n");
 
 	tx->macro = devm_clk_get_optional(dev, "macro");
 	if (IS_ERR(tx->macro))
@@ -1977,7 +1983,7 @@ static int tx_macro_probe(struct platform_device *pdev)
 	if (IS_ERR(tx->mclk))
 		return PTR_ERR(tx->mclk);
 
-	if (flags & LPASS_MACRO_FLAG_HAS_NPL_CLOCK) {
+	if (tx->data->has_npl_clock) {
 		tx->npl = devm_clk_get(dev, "npl");
 		if (IS_ERR(tx->npl))
 			return PTR_ERR(tx->npl);
@@ -2155,21 +2161,30 @@ static const struct dev_pm_ops tx_macro_pm_ops = {
 	SET_RUNTIME_PM_OPS(tx_macro_runtime_suspend, tx_macro_runtime_resume, NULL)
 };
 
+static const struct tx_macro_data sm8250_data = {
+	.has_npl_clock = true,
+};
+
+static const struct tx_macro_data sm8550_data = {
+	.has_npl_clock = false,
+};
+
 static const struct of_device_id tx_macro_dt_match[] = {
 	{
 		.compatible = "qcom,sc7280-lpass-tx-macro",
-		.data = (void *)LPASS_MACRO_FLAG_HAS_NPL_CLOCK,
+		.data = &sm8250_data,
 	}, {
 		.compatible = "qcom,sm8250-lpass-tx-macro",
-		.data = (void *)LPASS_MACRO_FLAG_HAS_NPL_CLOCK,
+		.data = &sm8250_data,
 	}, {
 		.compatible = "qcom,sm8450-lpass-tx-macro",
-		.data = (void *)LPASS_MACRO_FLAG_HAS_NPL_CLOCK,
+		.data = &sm8250_data,
 	}, {
 		.compatible = "qcom,sm8550-lpass-tx-macro",
+		.data = &sm8550_data,
 	}, {
 		.compatible = "qcom,sc8280xp-lpass-tx-macro",
-		.data = (void *)LPASS_MACRO_FLAG_HAS_NPL_CLOCK,
+		.data = &sm8250_data,
 	},
 	{ }
 };
