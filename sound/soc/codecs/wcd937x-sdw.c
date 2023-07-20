@@ -50,7 +50,7 @@ static struct sdw_dpn_prop wcd937x_dpn_prop[WCD937X_MAX_SWR_PORTS] = {
 		.num = 1,
 		.type = SDW_DPN_SIMPLE,
 		.min_ch = 1,
-		.max_ch = 4,
+		.max_ch = 4, // 4? 8?
 		.simple_ch_prep_sm = true,
 	}, {
 		.num = 2,
@@ -1004,7 +1004,7 @@ static const struct regmap_config wcd937x_regmap_config = {
 	.name = "wcd937x_csr",
 	.reg_bits = 32,
 	.val_bits = 8,
-	.cache_type = REGCACHE_RBTREE,
+	.cache_type = REGCACHE_MAPLE,
 	.reg_defaults = wcd937x_defaults,
 	.num_reg_defaults = ARRAY_SIZE(wcd937x_defaults),
 	.max_register = WCD937X_MAX_REGISTER,
@@ -1069,7 +1069,7 @@ static int wcd937x_probe(struct sdw_slave *pdev,
 	pdev->prop.lane_control_support = true;
 	pdev->prop.simple_clk_stop_capable = true;
 	if (wcd->is_tx) {
-		pdev->prop.source_ports = GENMASK(WCD937X_MAX_SWR_PORTS, 0);
+		pdev->prop.source_ports = GENMASK(WCD937X_MAX_TX_SWR_PORTS, 0);
 		pdev->prop.src_dpn_prop = wcd937x_dpn_prop;
 		wcd->ch_info = &wcd937x_sdw_tx_ch_info[0];
 		pdev->prop.wake_capable = true;
