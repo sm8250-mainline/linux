@@ -255,6 +255,7 @@ struct hpf_work {
 
 struct tx_macro_data {
 	bool has_npl_clock;
+	bool has_swr_master;
 };
 
 struct tx_macro {
@@ -1873,9 +1874,10 @@ static int swclk_gate_enable(struct clk_hw *hw)
 
 	tx_macro_mclk_enable(tx, true);
 
-	regmap_update_bits(regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
-			   CDC_TX_SWR_CLK_EN_MASK,
-			   CDC_TX_SWR_CLK_ENABLE);
+	if (tx->data->has_swr_master)
+		regmap_update_bits(regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
+				   CDC_TX_SWR_CLK_EN_MASK,
+				   CDC_TX_SWR_CLK_ENABLE);
 	return 0;
 }
 
@@ -1884,8 +1886,9 @@ static void swclk_gate_disable(struct clk_hw *hw)
 	struct tx_macro *tx = to_tx_macro(hw);
 	struct regmap *regmap = tx->regmap;
 
-	regmap_update_bits(regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
-			   CDC_TX_SWR_CLK_EN_MASK, 0x0);
+	if (tx->data->has_swr_master)
+		regmap_update_bits(regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
+				   CDC_TX_SWR_CLK_EN_MASK, 0x0);
 
 	tx_macro_mclk_enable(tx, false);
 	clk_disable_unprepare(tx->mclk);
@@ -2051,15 +2054,17 @@ static int tx_macro_probe(struct platform_device *pdev)
 	if (ret)
 		goto err_fsgen;
 
-	/* reset soundwire block */
-	regmap_update_bits(tx->regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
-			   CDC_TX_SWR_RESET_MASK, CDC_TX_SWR_RESET_ENABLE);
+	if (tx->data->has_swr_master) {
+		/* reset soundwire block */
+		regmap_update_bits(tx->regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
+				   CDC_TX_SWR_RESET_MASK, CDC_TX_SWR_RESET_ENABLE);
 
-	regmap_update_bits(tx->regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
-			   CDC_TX_SWR_CLK_EN_MASK,
-			   CDC_TX_SWR_CLK_ENABLE);
-	regmap_update_bits(tx->regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
-			   CDC_TX_SWR_RESET_MASK, 0x0);
+		regmap_update_bits(tx->regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
+				   CDC_TX_SWR_CLK_EN_MASK,
+				   CDC_TX_SWR_CLK_ENABLE);
+		regmap_update_bits(tx->regmap, CDC_TX_CLK_RST_CTRL_SWR_CONTROL,
+				   CDC_TX_SWR_RESET_MASK, 0x0);
+	}
 
 	ret = devm_snd_soc_register_component(dev, &tx_macro_component_drv,
 					      tx_macro_dai,
@@ -2161,18 +2166,28 @@ static const struct dev_pm_ops tx_macro_pm_ops = {
 	SET_RUNTIME_PM_OPS(tx_macro_runtime_suspend, tx_macro_runtime_resume, NULL)
 };
 
+static const struct tx_macro_data sm6115_data = {
+	.has_npl_clock = true,
+	.has_swr_master = false,
+};
+
 static const struct tx_macro_data sm8250_data = {
 	.has_npl_clock = true,
+	.has_swr_master = true,
 };
 
 static const struct tx_macro_data sm8550_data = {
 	.has_npl_clock = false,
+	.has_swr_master = true,
 };
 
 static const struct of_device_id tx_macro_dt_match[] = {
 	{
 		.compatible = "qcom,sc7280-lpass-tx-macro",
 		.data = &sm8250_data,
+	}, {
+		.compatible = "qcom,sm6115-lpass-tx-macro",
+		.data = &sm6115_data,
 	}, {
 		.compatible = "qcom,sm8250-lpass-tx-macro",
 		.data = &sm8250_data,
