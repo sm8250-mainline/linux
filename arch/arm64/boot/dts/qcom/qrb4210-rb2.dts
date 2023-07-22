@@ -638,7 +638,7 @@
 	wcd_tx: wcd9370-tx@0,3 {
 		compatible = "sdw20217010a00";
 		reg = <0 3>;
-		qcom,tx-port-mapping = <1 2 3>;
+		qcom,tx-port-mapping = <1 1 2 3>;
 	};
 };
 

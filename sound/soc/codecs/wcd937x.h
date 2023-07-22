@@ -434,7 +434,7 @@
 
 #define WCD937X_MAX_MICBIAS			3
 #define WCD937X_MAX_BULK_SUPPLY			3
-#define WCD937X_MAX_TX_SWR_PORTS		3
+#define WCD937X_MAX_TX_SWR_PORTS		4
 #define WCD937X_MAX_SWR_PORTS			5
 #define WCD937X_MAX_SWR_CH_IDS			15
 
@@ -558,7 +558,7 @@ enum wcd937x_tx_sdw_channels {
 	WCD937X_ADC1,
 	WCD937X_ADC2,
 	WCD937X_ADC3,
-	/* WCD937X_ADC4 on 9375, somewhere */
+	WCD937X_ADC4,
 	WCD937X_DMIC0,
 	WCD937X_DMIC1,
 	WCD937X_MBHC,
@@ -566,6 +566,8 @@ enum wcd937x_tx_sdw_channels {
 	WCD937X_DMIC3,
 	WCD937X_DMIC4,
 	WCD937X_DMIC5,
+	WCD937X_DMIC6,
+	WCD937X_DMIC7,
 };
 
 enum wcd937x_rx_sdw_ports {
