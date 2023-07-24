@@ -63,6 +63,34 @@ static inline struct panel_info *to_panel_info(struct drm_panel *panel)
 	return container_of(panel, struct panel_info, panel);
 }
 
+/*static int j716f_edo_init_sequence(struct panel_info *pinfo)
+{
+	struct mipi_dsi_device *dsi0 = pinfo->dsi[0];
+	struct mipi_dsi_device *dsi1 = pinfo->dsi[1];
+
+	pinfo->dsi[0]->mode_flags |= MIPI_DSI_MODE_LPM;
+	pinfo->dsi[1]->mode_flags |= MIPI_DSI_MODE_LPM;
+
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0xd4);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x00, 0x80);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0xd0);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x48, 0x00);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0x26);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x75, 0x3f);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x1d, 0x1a);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xfe, 0x00);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x53, 0x28);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0xc2, 0x08);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x35, 0x00);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x51, 0x07, 0xff);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x11, 0x00);
+	msleep(20);
+	mipi_dsi_dual_dcs_write_seq(dsi0, dsi1, 0x29, 0x00);
+	msleep(36);
+
+	return 0;
+}*/
+
 static int j716f_edo_init_sequence(struct panel_info *pinfo)
 {
 	struct mipi_dsi_device *dsi0 = pinfo->dsi[0];
@@ -89,7 +117,23 @@ static int j716f_edo_init_sequence(struct panel_info *pinfo)
 	return 0;
 }
 
+static const int transfer_time = 320;
+
 static const struct drm_display_mode j716f_edo_modes[] = {
+	{
+		.clock = (1280 + transfer_time) * 1600 * 90 / 1000,
+		.hdisplay = 1280,
+		.hsync_start = 1280 + transfer_time,
+		.hsync_end = 1280 + transfer_time,
+		.htotal = 1280 + transfer_time,
+		.vdisplay = 1600,
+		.vsync_start = 1600,
+		.vsync_end = 1600,
+		.vtotal = 1600,
+    },
+};
+
+/*static const struct drm_display_mode j716f_edo_modes[] = {
 	{
 		.clock = (1280 + 32 + 12 + 38) * (1600 + 20 + 4 + 8) * 60 / 1000,
 		.hdisplay = 1280,
@@ -101,7 +145,7 @@ static const struct drm_display_mode j716f_edo_modes[] = {
 		.vsync_end = 1600 + 20 + 4,
 		.vtotal = 1600 + 20 + 4 + 8,
 	},
-};
+};*/
 
 static const struct panel_desc j716f_edo_desc = {
 	.modes = j716f_edo_modes,
@@ -122,7 +166,7 @@ static const struct panel_desc j716f_edo_desc = {
 	.has_dcs_backlight = false,
 };
 
-static void rm69380_reset(struct panel_info *pinfo)
+/*static void rm69380_reset(struct panel_info *pinfo)
 {
 	gpiod_set_value_cansleep(pinfo->reset_gpio, 0);
 	usleep_range(15000, 16000);
@@ -130,7 +174,7 @@ static void rm69380_reset(struct panel_info *pinfo)
 	usleep_range(10000, 11000);
 	gpiod_set_value_cansleep(pinfo->reset_gpio, 0);
 	msleep(30);
-}
+}*/
 
 static int rm69380_prepare(struct drm_panel *panel)
 {
@@ -147,12 +191,12 @@ static int rm69380_prepare(struct drm_panel *panel)
 	    return ret;
 	}
 
-	rm69380_reset(pinfo);
+	//rm69380_reset(pinfo);
 
 	ret = pinfo->desc->init_sequence(pinfo);
 	if (ret < 0) {
 		dev_err(panel->dev, "failed to initialize panel: %d\n", ret);
-		gpiod_set_value_cansleep(pinfo->reset_gpio, 1);
+		//gpiod_set_value_cansleep(pinfo->reset_gpio, 1);
 		regulator_bulk_disable(ARRAY_SIZE(pinfo->supplies), pinfo->supplies);
 		return ret;
 	}
@@ -191,7 +235,7 @@ static int rm69380_unprepare(struct drm_panel *panel)
 	if (!pinfo->prepared)
 		return 0;
 
-	gpiod_set_value_cansleep(pinfo->reset_gpio, 1);
+	//gpiod_set_value_cansleep(pinfo->reset_gpio, 1);
 	regulator_bulk_disable(ARRAY_SIZE(pinfo->supplies), pinfo->supplies);
 
 	pinfo->prepared = false;

@@ -15,6 +15,8 @@
 #include "pm8150l.dtsi"
 #include "pm8009.dtsi"
 
+//#define DUAL_DSI
+
 / {
 	model = "Lenovo Xiaoxin Pad Pro 2021";
 	compatible = "lenovo,j716f", "qcom,sm8250";
@@ -43,7 +45,8 @@
 		ranges;
 
 		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0 clk_ignore_unused pd_ignore_unused";
-		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
+		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
+		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT";
 
 		//framebuffer0: framebuffer@9c000000 {
 		//	compatible = "simple-framebuffer";
@@ -538,9 +541,11 @@
 
 &mdss_dsi0 {
 	vdda-supply = <&vreg_l9a>;
-	//qcom,dual-dsi-mode;
-	//qcom,sync-dual-dsi;
-	//qcom,master-dsi;
+#if defined(DUAL_DSI)
+	qcom,dual-dsi-mode;
+	qcom,sync-dual-dsi;
+	qcom,master-dsi;
+#endif
 	status = "okay";
 
 	panel@0 {
@@ -551,9 +556,9 @@
 		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
 		status = "okay";
 
-		//pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
-		//pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
-		//pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
+		pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
+		pinctrl-names = "default", "sleep";
 
 		ports {
 			#address-cells = <1>;
@@ -567,13 +572,15 @@
 				};
 			};
 
-			//port@1{
-			//	reg = <1>;
+#if defined(DUAL_DSI)
+			port@1{
+				reg = <1>;
 
-			//	panel_in_1: endpoint {
-			//		remote-endpoint = <&mdss_dsi1_out>;
-			//	};
-			//};
+				panel_in_1: endpoint {
+					remote-endpoint = <&mdss_dsi1_out>;
+				};
+			};
+#endif
 		};
 	};
 };
@@ -588,25 +595,26 @@
 	status = "okay";
 };
 
-//&mdss_dsi1 {
-//	vdda-supply = <&vreg_l9a>;
-//	qcom,dual-dsi-mode;
-//	qcom,sync-dual-dsi;
+#if defined(DUAL_DSI)
+&mdss_dsi1 {
+	vdda-supply = <&vreg_l9a>;
+	qcom,dual-dsi-mode;
+	qcom,sync-dual-dsi;
 	/* DSI1 is slave, so use DSI0 clocks */
-//	assigned-clock-parents = <&mdss_dsi0_phy 0>, <&mdss_dsi0_phy 1>;
-//	status = "okay";
-//};
-//
-//&mdss_dsi1_out {
-//	data-lanes = <0 1 2 3>;
-//	remote-endpoint = <&panel_in_1>;
-//};
-//
-//&mdss_dsi1_phy {
-//	vdds-supply = <&vreg_l5a>;
-//	status = "okay";
-//};
+	assigned-clock-parents = <&mdss_dsi0_phy 0>, <&mdss_dsi0_phy 1>;
+	status = "okay";
+};
 
+&mdss_dsi1_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in_1>;
+};
+
+&mdss_dsi1_phy {
+	vdds-supply = <&vreg_l5a>;
+	status = "okay";
+};
+#endif
 //&pon_pwrkey {
 //	status = "okay";
 //};
@@ -644,28 +652,26 @@
 		output-high;
 	};
 
-	//sde_dsi_active: sde-dsi-active {
-	//	pins = "gpio75", "gpio60";
-	//	//pins = "gpio75";
-	//	function = "gpio";
-	//	drive-strength = <8>;
-	//	bias-disable;
-	//};
+	sde_dsi_active: sde-dsi-active {
+		pins = "gpio75", "gpio60";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
 
-	//sde_dsi_sleep: sde-dsi-sleep {
-	//	pins = "gpio75", "gpio60";
-	//	//pins = "gpio75";
-	//	function = "gpio";
-	//	drive-strength = <2>;
-	//	bias-pull-down;
-	//};
+	sde_dsi_sleep: sde-dsi-sleep {
+		pins = "gpio75", "gpio60";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
 
-	//sde_te_active_sleep: sde-te-active-sleep {
-	//	pins = "gpio66";
-	//	function = "mdp_vsync";
-	//	drive-strength = <2>;
-	//	bias-pull-down;
-	//};
+	sde_te_active_sleep: sde-te-active-sleep {
+		pins = "gpio66";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
 };
 
 &ufs_mem_hc {
