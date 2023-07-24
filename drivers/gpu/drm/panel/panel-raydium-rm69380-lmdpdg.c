@@ -138,14 +138,14 @@ static int rm69380_edo_amoled_unprepare(struct drm_panel *panel)
 	return 0;
 }
 
-static const int transfer_time = 460;
+static const int transfer_time = 320;
 
 static const struct drm_display_mode rm69380_edo_amoled_mode = {
 	.clock = (1280 + transfer_time) * 1600 * 60 / 1000,
 	.hdisplay = 1280,
-	.hsync_start = 1280 + transfer_time,
-	.hsync_end = 1280 + transfer_time,
-	.htotal = 1280 + transfer_time,
+	.hsync_start = (1280 + transfer_time),
+	.hsync_end = (1280 + transfer_time),
+	.htotal = (1280 + transfer_time),
 	.vdisplay = 1600,
 	.vsync_start = 1600,
 	.vsync_end = 1600,

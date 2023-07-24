@@ -46,7 +46,7 @@
 
 		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0 clk_ignore_unused pd_ignore_unused";
 		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
-		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT";
+		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT clk_ignore_unused";
 
 		//framebuffer0: framebuffer@9c000000 {
 		//	compatible = "simple-framebuffer";
