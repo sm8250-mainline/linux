@@ -46,7 +46,7 @@
 
 		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0 clk_ignore_unused pd_ignore_unused";
 		//bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT consoleblank=10 vt.global_cursor_default=0";
-		bootargs = "PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT clk_ignore_unused";
+		bootargs = "console=ttyS0,115200 console=ttyGS0,115200 PMOS_NOSPLASH PMOS_NO_OUTPUT_REDIRECT";
 
 		//framebuffer0: framebuffer@9c000000 {
 		//	compatible = "simple-framebuffer";
@@ -553,7 +553,7 @@
 		reg = <0>;
 		avdd-supply = <&avdd_disp>;
 		vddio-supply = <&vreg_l14a>;
-		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&tlmm 75 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 
 		pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;

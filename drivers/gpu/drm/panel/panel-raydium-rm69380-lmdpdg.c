@@ -27,7 +27,7 @@ struct rm69380_edo_amoled *to_rm69380_edo_amoled(struct drm_panel *panel)
 	return container_of(panel, struct rm69380_edo_amoled, panel);
 }
 
-/*static void rm69380_edo_amoled_reset(struct rm69380_edo_amoled *ctx)
+static void rm69380_edo_amoled_reset(struct rm69380_edo_amoled *ctx)
 {
 	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
 	usleep_range(15000, 16000);
@@ -35,7 +35,7 @@ struct rm69380_edo_amoled *to_rm69380_edo_amoled(struct drm_panel *panel)
 	usleep_range(10000, 11000);
 	gpiod_set_value_cansleep(ctx->reset_gpio, 0);
 	msleep(30);
-}*/
+}
 
 static int rm69380_edo_amoled_on(struct rm69380_edo_amoled *ctx)
 {
@@ -44,21 +44,22 @@ static int rm69380_edo_amoled_on(struct rm69380_edo_amoled *ctx)
 	dsi->mode_flags |= MIPI_DSI_MODE_LPM;
 
 	mipi_dsi_dcs_write_seq(dsi, 0xfe, 0xd4);
-	mipi_dsi_dcs_write_seq(dsi, 0xfe, 0xd4);
 	mipi_dsi_dcs_write_seq(dsi, 0x00, 0x80);
 	mipi_dsi_dcs_write_seq(dsi, 0xfe, 0xd0);
 	mipi_dsi_dcs_write_seq(dsi, 0x48, 0x00);
 	mipi_dsi_dcs_write_seq(dsi, 0xfe, 0x26);
 	mipi_dsi_dcs_write_seq(dsi, 0x75, 0x3f);
 	mipi_dsi_dcs_write_seq(dsi, 0x1d, 0x1a);
+	//mipi_dsi_dcs_write_seq(dsi, 0xfe, 0x40); // From 60Hz timing - 90Hz timing doesn't have this
+	//mipi_dsi_dcs_write_seq(dsi, 0xbd, 0x05); // From 60Hz timing - 90Hz timing doesn't have this
 	mipi_dsi_dcs_write_seq(dsi, 0xfe, 0x00);
 	mipi_dsi_dcs_write_seq(dsi, 0x53, 0x28);
 	mipi_dsi_dcs_write_seq(dsi, 0xc2, 0x08);
-	mipi_dsi_dcs_write_seq(dsi, 0x35, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0x51, 0x07, 0xff);
-	mipi_dsi_dcs_write_seq(dsi, 0x11, 0x00);
+	mipi_dsi_dcs_write_seq(dsi, 0x35, 0x00); // set_tear_on
+	mipi_dsi_dcs_write_seq(dsi, 0x51, 0x02, 0x00); // set_display_brightness
+	mipi_dsi_dcs_write_seq(dsi, 0x11, 0x00); // exit_sleep_mode
 	msleep(20);
-	mipi_dsi_dcs_write_seq(dsi, 0x29, 0x00);
+	mipi_dsi_dcs_write_seq(dsi, 0x29, 0x00); // set_display_on
 	msleep(36);
 
 	return 0;
@@ -143,9 +144,9 @@ static const int transfer_time = 320;
 static const struct drm_display_mode rm69380_edo_amoled_mode = {
 	.clock = (1280 + transfer_time) * 1600 * 60 / 1000,
 	.hdisplay = 1280,
-	.hsync_start = (1280 + transfer_time),
-	.hsync_end = (1280 + transfer_time),
-	.htotal = (1280 + transfer_time),
+	.hsync_start = 1280 + transfer_time,
+	.hsync_end = 1280 + transfer_time,
+	.htotal = 1280 + transfer_time,
 	.vdisplay = 1600,
 	.vsync_start = 1600,
 	.vsync_end = 1600,
@@ -153,20 +154,6 @@ static const struct drm_display_mode rm69380_edo_amoled_mode = {
 	.width_mm = 0,
 	.height_mm = 0,
 };
-
-/*static const struct drm_display_mode rm69380_edo_amoled_mode = {
-	.clock = (1280 + 32 + 12 + 38) * (1600 + 20 + 4 + 8) * 60 / 1000,
-	.hdisplay = 1280,
-	.hsync_start = 1280 + 32,
-	.hsync_end = 1280 + 32 + 12,
-	.htotal = 1280 + 32 + 12 + 38,
-	.vdisplay = 1600,
-	.vsync_start = 1600 + 20,
-	.vsync_end = 1600 + 20 + 4,
-	.vtotal = 1600 + 20 + 4 + 8,
-	.width_mm = 0,
-	.height_mm = 0,
-};*/
 
 static int rm69380_edo_amoled_get_modes(struct drm_panel *panel,
 					struct drm_connector *connector)
@@ -210,10 +197,10 @@ static int rm69380_edo_amoled_probe(struct mipi_dsi_device *dsi)
 	if (ret < 0)
 		return dev_err_probe(dev, ret, "Failed to get regulators\n");
 
-	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
-	if (IS_ERR(ctx->reset_gpio))
-		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
-				     "Failed to get reset-gpios\n");
+	//ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+	//if (IS_ERR(ctx->reset_gpio))
+	//	return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
+	//			     "Failed to get reset-gpios\n");
 
 	ctx->dsi = dsi;
 	mipi_dsi_set_drvdata(dsi, ctx);
